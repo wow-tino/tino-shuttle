@@ -1,0 +1,30 @@
+name: Check Build
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  FE-Build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack & Prepare pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create .env.production file
+        run: |
+          echo "${{ secrets.PROD_ENV }}" > .env.production
+
+      - name: Build
+        run: pnpm run build

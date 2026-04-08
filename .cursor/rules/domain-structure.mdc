@@ -1,0 +1,104 @@
+---
+description: Domain 폴더 구조 및 API 레이어 컨벤션
+globs:
+  - "src/domain/**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+아래 구조와 네이밍 규칙을 반드시 따른다.
+
+폴더 구조
+
+- `src/domain/<parent-domain>/`
+- `components/`
+- `utils/`
+- `hooks/`
+- `api/keys/index.ts`
+- `api/services/index.ts`
+- `api/models/index.ts`
+- `api/queries/index.ts`
+- `api/mutations/index.ts`
+- `schemas/` (validateSearch, form schema 전용)
+- `constants/`
+- `src/domain/<parent-domain>/<child-domain>/`도 동일 구조 반복
+
+일반 규칙
+
+- 신규 기능 파일은 반드시 해당 도메인 내부에 생성한다.
+- `api/*/index.ts`를 배럴 엔트리로 사용하고 외부 import는 index만 사용한다.
+- 폴더/파일명은 `kebab-case`를 사용한다.
+- `queries`, `mutations` 객체의 프로퍼티명은 `PascalCase`를 사용한다.
+- 하드코딩 query key 문자열 사용을 금지하고 `keys` 팩토리만 사용한다.
+
+keys 규칙
+
+- 이름: `<domainName>Keys`
+- 최소 제공: `all`, `list`, `detail`, `create`, `update`, `delete`
+- 예시:
+  `export const domainNameKeys = {`
+  `  all: ["domainName"] as const,`
+  `  list: () => [...domainNameKeys.all, "list"] as const,`
+  `  detail: (id: string) => [...domainNameKeys.all, "detail", id] as const,`
+  `  create: () => [...domainNameKeys.all, "create"] as const,`
+  `  update: () => [...domainNameKeys.all, "update"] as const,`
+  `  delete: () => [...domainNameKeys.all, "delete"] as const,`
+  `};`
+
+services 규칙
+
+- 함수명 접두사: `get`, `post`, `update`, `delete`
+- 서비스는 API 호출 책임만 가진다 (UI/상태 처리 금지)
+- 예시:
+  `export const getDomainList = async () => {};`
+  `export const postDomain = async () => {};`
+  `export const updateDomain = async () => {};`
+  `export const deleteDomain = async () => {};`
+
+queries 규칙
+
+- 상수명: `DOMAIN_NAME_QUERIES`
+- `queryOptions` 사용
+- `queryKey`는 `domainNameKeys.*()`를 사용
+- `queryFn`은 services 함수 사용
+- 예시:
+  `export const DOMAIN_NAME_QUERIES = {`
+  `  GetDomainList: () => queryOptions({`
+  `    queryKey: domainNameKeys.list(),`
+  `    queryFn: getDomainList,`
+  `  }),`
+  `};`
+
+mutations 규칙
+
+- 상수명: `DOMAIN_NAME_MUTATIONS`
+- `mutationOptions` 사용
+- `mutationFn` 사용 (`queryFn` 금지)
+- `mutationKey`는 `domainNameKeys.*()` 사용
+- 예시:
+  `export const DOMAIN_NAME_MUTATIONS = {`
+  `  PostDomain: () => mutationOptions({`
+  `    mutationKey: domainNameKeys.create(),`
+  `    mutationFn: postDomain,`
+  `  }),`
+  `};`
+
+models 규칙
+
+- `models`는 `zod` 기반으로 정의한다.
+- 스키마명 접미사: `RequestSchema`, `ResponseSchema`
+- 타입은 `z.infer`로 파생한다.
+- 예시:
+  `import { z } from "zod";`
+  `export const GetDomainListRequestSchema = z.object({});`
+  `export const GetDomainListResponseSchema = z.object({`
+  `  items: z.array(z.object({ id: z.string() })),`
+  `});`
+  `export type GetDomainListRequest = z.infer<typeof GetDomainListRequestSchema>;`
+  `export type GetDomainListResponse = z.infer<typeof GetDomainListResponseSchema>;`
+
+금지 사항
+
+- 도메인 외부에 임의 API 파일 생성 금지
+- `queries/mutations`에서 key 하드코딩 금지
+- `mutationOptions`에서 `queryFn` 사용 금지
+- `models`를 인터페이스 단독으로만 정의하는 방식 금지 (반드시 zod 스키마 포함)

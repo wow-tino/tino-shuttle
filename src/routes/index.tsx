@@ -1,0 +1,18 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
+import { ShuttleHomeScreen } from "#/domain/shuttle/components/shuttle-home-screen";
+
+export const Route = createFileRoute("/")({
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(SHUTTLE_QUERIES.GetShuttlePatterns()),
+      context.queryClient.ensureQueryData(SHUTTLE_QUERIES.GetShuttleTimetableRules()),
+    ]);
+  },
+  component: ShuttleHomeRoute,
+});
+
+function ShuttleHomeRoute() {
+  return <ShuttleHomeScreen />;
+}
