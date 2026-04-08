@@ -1,6 +1,6 @@
 const isProduction = import.meta.env.PROD;
 
-const GA_MEASUREMENT_ID = "G-4H3Z388Z6P";
+const GA_MEASUREMENT_ID = "G-30B2Q53F6T";
 
 export function GoogleAnalyticsProvider() {
   return isProduction ? (
