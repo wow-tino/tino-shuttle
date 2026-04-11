@@ -15,37 +15,36 @@ export interface ResolvedBoardingCoordinates {
 export function resolveBoardingCoordinates(
   pattern: ShuttlePatternDto,
   reference: Date,
-  eveningStartHourLocal: number,
-): ResolvedBoardingCoordinates | null {
-  const hourLocal: number = reference.getHours();
-  const hasEvening: boolean =
+  eveningStartHourLocal: number
+): ResolvedBoardingCoordinates {
+  const hourLocal = reference.getHours();
+  const hasEvening =
     pattern.boardingEveningLatitude !== null && pattern.boardingEveningLongitude !== null;
-  const hasDay: boolean =
-    pattern.boardingLatitude !== null && pattern.boardingLongitude !== null;
+  const hasDay = pattern.boardingLatitude !== null && pattern.boardingLongitude !== null;
 
   if (hourLocal >= eveningStartHourLocal && hasEvening) {
     return {
-      latitude: pattern.boardingEveningLatitude as number,
-      longitude: pattern.boardingEveningLongitude as number,
+      latitude: pattern.boardingEveningLatitude,
+      longitude: pattern.boardingEveningLongitude,
       source: "evening",
     };
   }
 
   if (hasDay) {
     return {
-      latitude: pattern.boardingLatitude as number,
-      longitude: pattern.boardingLongitude as number,
+      latitude: pattern.boardingLatitude,
+      longitude: pattern.boardingLongitude,
       source: "day",
     };
   }
 
   if (hasEvening) {
     return {
-      latitude: pattern.boardingEveningLatitude as number,
-      longitude: pattern.boardingEveningLongitude as number,
+      latitude: pattern.boardingEveningLatitude,
+      longitude: pattern.boardingEveningLongitude,
       source: "evening",
     };
   }
 
-  return null;
+  throw new Error("탑승 위치 좌표를 찾을 수 없습니다. 관리자에게 문의해 주세요.");
 }

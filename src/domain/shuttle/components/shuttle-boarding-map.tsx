@@ -14,31 +14,23 @@ interface ShuttleBoardingMapProps {
 }
 
 export function ShuttleBoardingMap({ pattern, referenceInstant }: ShuttleBoardingMapProps) {
-  const coordinates = resolveBoardingCoordinates(
+  const { latitude, longitude } = resolveBoardingCoordinates(
     pattern,
     referenceInstant,
     SHUTTLE_EVENING_BOARDING_START_HOUR_LOCAL
   );
 
-  if (coordinates === null) {
-    return (
-      <p className="text-muted-foreground text-sm" role="status">
-        이 노선의 탑승 위치 좌표가 아직 등록되지 않았습니다.
-      </p>
-    );
-  }
-
   useEffect(() => {
     const naverMap = new window.naver.maps.Map("map", {
-      center: new naver.maps.LatLng(coordinates.latitude, coordinates.longitude),
+      center: new naver.maps.LatLng(latitude, longitude),
       zoom: SHUTTLE_BOARDING_MAP_DEFAULT_ZOOM,
     });
 
     new window.naver.maps.Marker({
-      position: new window.naver.maps.LatLng(coordinates.latitude, coordinates.longitude),
+      position: new window.naver.maps.LatLng(latitude, longitude),
       map: naverMap,
     });
-  }, [coordinates]);
+  }, [latitude, longitude]);
 
   return <div key={pattern.id} id="map" style={{ height: SHUTTLE_BOARDING_MAP_MIN_HEIGHT_PX }} />;
 }

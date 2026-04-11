@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
 import { ShuttleHomeScreen } from "#/domain/shuttle/components/shuttle-home-screen";
+import { ErrorBoundary } from "#/shared/components/error-boundary";
+import { Loading } from "#/shared/components/loading";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
@@ -14,5 +16,9 @@ export const Route = createFileRoute("/")({
 });
 
 function ShuttleHomeRoute() {
-  return <ShuttleHomeScreen />;
+  return (
+    <ErrorBoundary suspenseFallback={<Loading title="탑승 노선을 불러오는 중 이에요..." />}>
+      <ShuttleHomeScreen />
+    </ErrorBoundary>
+  );
 }
