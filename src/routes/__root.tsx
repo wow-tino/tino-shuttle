@@ -1,11 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { NotFoundRouteProps } from "@tanstack/react-router";
-import { createRootRouteWithContext, HeadContent, Link, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
 import { inject as vercelInject } from "@vercel/analytics";
 
 import appCss from "../styles.css?url";
 
 import { BottomNavigation } from "#/shared/components/bottom-navigation";
+import { GlobalError } from "#/shared/components/global/global-error";
+import { GlobalNotFound } from "#/shared/components/global/global-not-found";
 import { NaverMapsRootProvider, TanStackProvider } from "#/shared/components/provider";
 import { GoogleAnalyticsProvider } from "#/shared/components/provider/google-analytics-provider";
 
@@ -15,31 +16,9 @@ interface MyRouterContext {
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`;
 
-function GlobalNotFoundScreen({ routeId }: NotFoundRouteProps) {
-  return (
-    <main
-      className="flex min-h-[50dvh] flex-col items-center justify-center gap-4 px-4 py-12 text-center"
-      data-not-found-boundary={routeId}
-      role="alert"
-      aria-live="polite"
-    >
-      <h1 className="text-foreground text-xl font-semibold">페이지를 찾을 수 없습니다</h1>
-      <p className="text-muted-foreground max-w-sm text-sm">
-        주소가 잘못되었거나 삭제된 페이지일 수 있어요.
-      </p>
-      <Link
-        to="/"
-        className="text-primary focus-visible:ring-ring rounded-md text-sm font-medium underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-        aria-label="홈 화면으로 이동"
-      >
-        홈으로 돌아가기
-      </Link>
-    </main>
-  );
-}
-
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  notFoundComponent: GlobalNotFoundScreen,
+  notFoundComponent: GlobalNotFound,
+  errorComponent: GlobalError,
   head: () => ({
     meta: [
       {
