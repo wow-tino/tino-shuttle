@@ -5,9 +5,9 @@ import type {
 import { api } from "#/shared/api";
 
 export const getShuttlePatterns = async () => {
-  return api<GetShuttlePatternsResponse>("/shuttle/patterns");
+  return api<GetShuttlePatternsResponse>("shuttle/patterns");
 };
 
 export const getShuttleTimetableRules = async () => {
-  return api<GetShuttleTimetableRulesResponse>("/shuttle/time-table-rules");
+  return api<GetShuttleTimetableRulesResponse>("shuttle/time-table-rules");
 };
