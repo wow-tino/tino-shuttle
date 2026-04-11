@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 
-import { useQueries } from "@tanstack/react-query";
+import { useSuspenseQueries } from "@tanstack/react-query";
 
 import type { ShuttlePatternDto } from "#/domain/shuttle/api/models";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
@@ -23,10 +23,7 @@ const now = new Date();
 function resolveSelectedPattern(
   patterns: ShuttlePatternDto[],
   selectedCode: string | null
-): ShuttlePatternDto | null {
-  if (patterns.length === 0) {
-    return null;
-  }
+): ShuttlePatternDto {
   if (selectedCode) {
     const hit = patterns.find((p) => p.code === selectedCode);
     if (hit) {
@@ -40,54 +37,23 @@ function resolveSelectedPattern(
 export function ShuttleHomeScreen() {
   const { selectedPatternCode, setSelectedPatternCode } = useSelectedShuttlePatternStore();
 
-  const [patternsQuery, rulesQuery] = useQueries({
+  const [patternsQuery, rulesQuery] = useSuspenseQueries({
     queries: [SHUTTLE_QUERIES.GetShuttlePatterns(), SHUTTLE_QUERIES.GetShuttleTimetableRules()],
   });
 
-  const patterns = patternsQuery.data?.patterns ?? [];
-  const rules = rulesQuery.data?.rules ?? [];
+  const patterns = patternsQuery.data.patterns;
+  const rules = rulesQuery.data.rules;
 
   const selectedPattern = useMemo(
     () => resolveSelectedPattern(patterns, selectedPatternCode),
     [patterns, selectedPatternCode]
   );
 
-  const isLoading = patternsQuery.isPending || rulesQuery.isPending;
-  const isError = patternsQuery.isError || rulesQuery.isError;
-
   useEffect(() => {
-    if (!selectedPatternCode && selectedPattern) {
+    if (!selectedPatternCode) {
       setSelectedPatternCode(selectedPattern.code);
     }
   }, [selectedPattern, selectedPatternCode, setSelectedPatternCode]);
-
-  if (isLoading) {
-    return (
-      <main className="mx-auto flex min-h-[70dvh] max-w-lg flex-col justify-center p-6 pb-8">
-        <p className="text-muted-foreground text-center text-sm" aria-live="polite">
-          시간표를 불러오는 중…
-        </p>
-      </main>
-    );
-  }
-
-  if (isError) {
-    return (
-      <main className="mx-auto flex min-h-[70dvh] max-w-lg flex-col justify-center p-6 pb-8">
-        <p className="text-destructive text-center text-sm" role="alert">
-          데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
-        </p>
-      </main>
-    );
-  }
-
-  if (!selectedPattern) {
-    return (
-      <main className="mx-auto flex min-h-[70dvh] max-w-lg flex-col justify-center p-6 pb-8">
-        <p className="text-muted-foreground text-center text-sm">등록된 노선이 없습니다.</p>
-      </main>
-    );
-  }
 
   return (
     <main className="flex flex-col gap-6 p-6">
@@ -111,7 +77,7 @@ export function ShuttleHomeScreen() {
             className="w-full min-w-0"
             aria-label="탑승 노선 선택"
           >
-            <SelectValue placeholder="노선을 선택하세요" />
+            <SelectValue placeholder="노선을 선택하세요">{selectedPattern.nameKo}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {patterns.map((p) => (
