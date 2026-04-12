@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ShuttlePatternDto, ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
-import { formatHm, startOfLocalDay } from "#/domain/shuttle/utils/date-time";
 import {
   buildShuttleBoardViewModel,
   computeLastShuttleDepartureAt,
   computeNextShuttleDepartureAt,
 } from "#/domain/shuttle/utils/next-bus";
+import { formatHm, startOfLocalDay } from "#/shared/utils";
 
 const SECOND_MS = 1_000;
 const THIRTY_MINUTES_MS = 30 * 60 * 1_000;
@@ -66,7 +66,11 @@ export function ShuttleTimeList({ pattern, rules }: ShuttleTimeListProps) {
 
   const firstDepartureAtMs = useMemo((): number | null => {
     const todayStart: Date = startOfLocalDay(now);
-    const firstDepartureAt: Date | null = computeNextShuttleDepartureAt(pattern.id, todayStart, rules);
+    const firstDepartureAt: Date | null = computeNextShuttleDepartureAt(
+      pattern.id,
+      todayStart,
+      rules
+    );
     return firstDepartureAt ? firstDepartureAt.getTime() : null;
   }, [pattern.id, now, rules]);
 
@@ -163,68 +167,75 @@ export function ShuttleTimeList({ pattern, rules }: ShuttleTimeListProps) {
     };
   }, [shouldTick]);
 
-  return (
-    <>
-      {board.status === "waiting" && board.departureTimeLabel !== null && (
-        <div className="space-y-1">
-          <p className="text-muted-foreground text-sm">
-            {isTodayFirstTrip && msUntilFirstTrip !== null && msUntilFirstTrip > THIRTY_MINUTES_MS
-              ? "오늘 첫차"
-              : "출발 시각"}
-          </p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{board.departureTimeLabel}</p>
-            {isLastTrip && (
-              <span
-                className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-xs font-medium"
-                aria-label="막차"
-              >
-                막차
-              </span>
-            )}
-          </div>
-          {shouldShowCountdown && (
-            <p
-              className="text-muted-foreground text-sm tabular-nums"
-              aria-live="polite"
-              aria-label="출발까지 남은 시간"
+  // 시간표 기반 운행 중인 경우
+  if (board.status === "waiting" && board.departureTimeLabel !== null) {
+    return (
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-sm">
+          {isTodayFirstTrip && msUntilFirstTrip !== null && msUntilFirstTrip > THIRTY_MINUTES_MS
+            ? "오늘 첫차"
+            : "출발 시각"}
+        </p>
+        <div className="flex items-baseline gap-2">
+          <p className="text-3xl font-semibold tabular-nums">{board.departureTimeLabel}</p>
+          {isLastTrip && (
+            <span
+              className="bg-destructive/10 text-destructive rounded-full px-2 py-0.5 text-xs font-medium"
+              aria-label="막차"
             >
-              {countdownLabel === "곧 출발" ? "곧 출발" : `약 ${countdownLabel} 후`}
-            </p>
-          )}
-
-          {nextNextDepartureLabel !== null && (
-            <p className="text-muted-foreground text-sm" aria-label="다음 출발 시각">
-              다음 차는 <span className="text-foreground font-medium">{nextNextDepartureLabel}</span>
-            </p>
+              막차
+            </span>
           )}
         </div>
-      )}
+        {shouldShowCountdown && (
+          <p
+            className="text-muted-foreground text-sm tabular-nums"
+            aria-live="polite"
+            aria-label="출발까지 남은 시간"
+          >
+            {countdownLabel === "곧 출발" ? "곧 출발" : `약 ${countdownLabel} 후`}
+          </p>
+        )}
 
-      {board.status === "in_service_adhoc" && (
-        <div className="space-y-1">
-          <p className="text-foreground text-base font-medium">수시 운행 구간</p>
-          {board.detailNote ? (
-            <p className="text-muted-foreground text-sm">{board.detailNote}</p>
-          ) : (
-            <p className="text-muted-foreground text-sm">정해진 시각 없이 운행 중입니다.</p>
-          )}
-        </div>
-      )}
+        {nextNextDepartureLabel !== null && (
+          <p className="text-muted-foreground text-sm" aria-label="다음 출발 시각">
+            다음 차는 <span className="text-foreground font-medium">{nextNextDepartureLabel}</span>
+          </p>
+        )}
+      </div>
+    );
+  }
 
-      {board.status === "ended_today" && (
-        <div className="space-y-2">
-          <p className="text-foreground text-base font-medium">오늘 운행이 종료되었습니다.</p>
-          {board.nextDayFirstLabel ? (
-            <p className="text-muted-foreground text-sm">
-              내일 첫차{" "}
-              <span className="text-foreground font-semibold">{board.nextDayFirstLabel}</span>
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm">다음 운행 일정을 확인할 수 없습니다.</p>
-          )}
-        </div>
-      )}
-    </>
-  );
+  // 수시 운행 구간인 경우
+  if (board.status === "in_service_adhoc") {
+    return (
+      <div className="space-y-1">
+        <p className="text-foreground text-base font-medium">수시 운행 구간</p>
+        {board.detailNote ? (
+          <p className="text-muted-foreground text-sm">{board.detailNote}</p>
+        ) : (
+          <p className="text-muted-foreground text-sm">정해진 시각 없이 운행 중입니다.</p>
+        )}
+      </div>
+    );
+  }
+
+  // 운행이 종료된 경우
+  if (board.status === "ended_today") {
+    return (
+      <div className="space-y-2">
+        <p className="text-foreground text-base font-medium">오늘 운행이 종료되었습니다.</p>
+        {board.nextDayFirstLabel ? (
+          <p className="text-muted-foreground text-sm">
+            내일 첫차{" "}
+            <span className="text-foreground font-semibold">{board.nextDayFirstLabel}</span>
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm">다음 운행 일정을 확인할 수 없습니다.</p>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }

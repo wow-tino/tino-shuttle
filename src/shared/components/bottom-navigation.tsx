@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 
-import { Clock, Home } from "lucide-react";
+import { Bus, Home, TrainFront } from "lucide-react";
 
 import { cn } from "../utils/utils";
 
@@ -11,9 +11,14 @@ const ROUTES = [
     label: "홈",
   },
   {
-    path: "/timetable",
-    icon: Clock,
-    label: "시간표",
+    path: "/shuttle",
+    icon: Bus,
+    label: "셔틀",
+  },
+  {
+    path: "/subway",
+    icon: TrainFront,
+    label: "전철",
   },
 ] as const;
 
@@ -21,7 +26,7 @@ export function BottomNavigation() {
   const { pathname } = useLocation();
 
   return (
-    <div className="max-w-mobile fixed right-0 bottom-0 left-0 mx-auto bg-white pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-sm">
+    <div className="max-w-mobile fixed right-0 bottom-0 left-0 z-50 mx-auto bg-white pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-sm">
       <div className="flex text-xs">
         {ROUTES.map((route) => (
           <Link

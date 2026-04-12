@@ -6,10 +6,7 @@ import type {
 } from "#/domain/shuttle/api/models";
 import { getSupabaseServerClient } from "#/server/supabase-server";
 import { TtlMemoryCache } from "#/server/ttl-memory-cache";
-import {
-  withErrorResponseFromUnknown,
-  withSuccessResponse,
-} from "#/shared/api";
+import { withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
 
 const timetableCache = new TtlMemoryCache(120_000);
 
@@ -59,7 +56,7 @@ export const Route = createFileRoute("/api/shuttle/time-table-rules")({
           const { data, error } = await supabase
             .from("shuttle_timetable_rule")
             .select(
-              "id, pattern_id, service_day, mode, hour, minute, start_time, end_time, headway_min, linked_pattern_id, offset_min, note",
+              "id, pattern_id, service_day, mode, hour, minute, start_time, end_time, headway_min, linked_pattern_id, offset_min, note"
             );
 
           if (error) {
@@ -81,8 +78,8 @@ export const Route = createFileRoute("/api/shuttle/time-table-rules")({
                 linked_pattern_id: number | null;
                 offset_min: number;
                 note: string | null;
-              },
-            ),
+              }
+            )
           );
 
           const payload: GetShuttleTimetableRulesResponse = { rules };
