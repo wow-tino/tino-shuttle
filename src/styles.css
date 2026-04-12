@@ -56,10 +56,16 @@
   --shadow-2xl: 0 4px 10px -2px hsl(0 0 0 / 0.25);
   --tracking-normal: -0.01em;
   --spacing: 0.25rem;
+
+  --app-bottom-nav-offset: 60px;
+  --app-shell-padding-bottom: calc(var(--app-bottom-nav-offset) + env(safe-area-inset-bottom));
+  --app-main-min-height: calc(100dvh - var(--app-bottom-nav-offset) - env(safe-area-inset-bottom));
 }
 
 @theme inline {
   --spacing-mobile: var(--mobile);
+  --spacing-app-shell-padding-bottom: var(--app-shell-padding-bottom);
+  --spacing-app-main-min-height: var(--app-main-min-height);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -116,6 +122,9 @@
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
   --tracking-wider: calc(var(--tracking-normal) + 0.05em);
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+
+  /* min-h-app-main — 로딩/전체 높이 콘텐츠가 탭에 가리지 않도록 */
+  --min-height-app-main: var(--app-main-min-height);
 }
 
 @layer base {
