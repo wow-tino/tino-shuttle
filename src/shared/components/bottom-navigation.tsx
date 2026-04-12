@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 
-import { Clock, Home } from "lucide-react";
+import { Bus, Home, TrainFront } from "lucide-react";
 
 import { cn } from "../utils/utils";
 
@@ -11,9 +11,14 @@ const ROUTES = [
     label: "홈",
   },
   {
-    path: "/timetable",
-    icon: Clock,
-    label: "시간표",
+    path: "/shuttle",
+    icon: Bus,
+    label: "셔틀",
+  },
+  {
+    path: "/subway",
+    icon: TrainFront,
+    label: "전철",
   },
 ] as const;
 
