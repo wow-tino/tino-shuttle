@@ -1,8 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import { useSuspenseQueries } from "@tanstack/react-query";
 
-import type { ShuttlePatternDto } from "#/domain/shuttle/api/models";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
 import { ShuttleBoardingMap } from "#/domain/shuttle/components/shuttle-boarding-map";
 import { ShuttleTimeList } from "#/domain/shuttle/components/shuttle-time-list";
@@ -16,23 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/shared/components/select";
+import { resolveSelectedPattern } from "#/shared/utils";
 
-const DEFAULT_PATTERN_CODE = "main_to_jungwang";
 const now = new Date();
-
-function resolveSelectedPattern(
-  patterns: ShuttlePatternDto[],
-  selectedCode: string | null
-): ShuttlePatternDto {
-  if (selectedCode) {
-    const hit = patterns.find((p) => p.code === selectedCode);
-    if (hit) {
-      return hit;
-    }
-  }
-  const preferred = patterns.find((p) => p.code === DEFAULT_PATTERN_CODE);
-  return preferred ?? patterns[0];
-}
 
 export function ShuttleHomeScreen() {
   const { selectedPatternCode, setSelectedPatternCode } = useSelectedShuttlePatternStore();
@@ -48,12 +33,6 @@ export function ShuttleHomeScreen() {
     () => resolveSelectedPattern(patterns, selectedPatternCode),
     [patterns, selectedPatternCode]
   );
-
-  useEffect(() => {
-    if (!selectedPatternCode) {
-      setSelectedPatternCode(selectedPattern.code);
-    }
-  }, [selectedPattern, selectedPatternCode, setSelectedPatternCode]);
 
   return (
     <main className="flex flex-col gap-6 p-6">

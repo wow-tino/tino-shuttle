@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ShuttlePatternDto, ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
-import { formatHm, startOfLocalDay } from "#/domain/shuttle/utils/date-time";
 import {
   buildShuttleBoardViewModel,
   computeLastShuttleDepartureAt,
   computeNextShuttleDepartureAt,
 } from "#/domain/shuttle/utils/next-bus";
+import { formatHm, startOfLocalDay } from "#/shared/utils";
 
 const SECOND_MS = 1_000;
 const THIRTY_MINUTES_MS = 30 * 60 * 1_000;
@@ -66,7 +66,11 @@ export function ShuttleTimeList({ pattern, rules }: ShuttleTimeListProps) {
 
   const firstDepartureAtMs = useMemo((): number | null => {
     const todayStart: Date = startOfLocalDay(now);
-    const firstDepartureAt: Date | null = computeNextShuttleDepartureAt(pattern.id, todayStart, rules);
+    const firstDepartureAt: Date | null = computeNextShuttleDepartureAt(
+      pattern.id,
+      todayStart,
+      rules
+    );
     return firstDepartureAt ? firstDepartureAt.getTime() : null;
   }, [pattern.id, now, rules]);
 
@@ -195,7 +199,8 @@ export function ShuttleTimeList({ pattern, rules }: ShuttleTimeListProps) {
 
           {nextNextDepartureLabel !== null && (
             <p className="text-muted-foreground text-sm" aria-label="다음 출발 시각">
-              다음 차는 <span className="text-foreground font-medium">{nextNextDepartureLabel}</span>
+              다음 차는{" "}
+              <span className="text-foreground font-medium">{nextNextDepartureLabel}</span>
             </p>
           )}
         </div>

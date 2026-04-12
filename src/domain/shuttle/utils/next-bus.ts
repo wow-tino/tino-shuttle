@@ -1,14 +1,12 @@
 import type { ShuttleServiceDay, ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
+import { getServiceDayForLocalDate } from "#/domain/shuttle/utils/service-day";
 import {
   addDays,
   addMinutes,
-  buildFixedDepartureOnDay,
   formatHm,
-  minutesBetweenCeil,
   parsePgTimeOnLocalDay,
   startOfLocalDay,
-} from "#/domain/shuttle/utils/date-time";
-import { getServiceDayForLocalDate } from "#/domain/shuttle/utils/service-day";
+} from "#/shared/utils";
 
 const MAX_LINK_DEPTH = 6;
 
@@ -24,11 +22,22 @@ export interface ShuttleBoardViewModel {
   readonly nextDayFirstLabel: string | null;
 }
 
+function buildFixedDepartureOnDay(dayStart: Date, hour: number, minute: number): Date {
+  const d = new Date(dayStart.getTime());
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
+function minutesBetweenCeil(from: Date, to: Date): number {
+  const diffMs = to.getTime() - from.getTime();
+  return Math.max(0, Math.ceil(diffMs / 60_000));
+}
+
 function filterRules(
   rules: ShuttleTimetableRuleDto[],
   patternId: number,
   serviceDay: ShuttleServiceDay
-): ShuttleTimetableRuleDto[] {
+) {
   return rules.filter((r) => r.patternId === patternId && r.serviceDay === serviceDay);
 }
 
@@ -37,8 +46,8 @@ function collectFixedDeparturesOnDay(
   serviceDay: ShuttleServiceDay,
   rules: ShuttleTimetableRuleDto[],
   dayStart: Date
-): Date[] {
-  const list: Date[] = [];
+) {
+  const list = [];
   for (const r of rules) {
     if (r.patternId !== patternId || r.serviceDay !== serviceDay || r.mode !== "FIXED") {
       continue;
@@ -56,12 +65,12 @@ function earliestFixedOnDay(
   serviceDay: ShuttleServiceDay,
   rules: ShuttleTimetableRuleDto[],
   dayStart: Date
-): Date | null {
-  const candidates: Date[] = collectFixedDeparturesOnDay(patternId, serviceDay, rules, dayStart);
+) {
+  const candidates = collectFixedDeparturesOnDay(patternId, serviceDay, rules, dayStart);
   if (candidates.length === 0) {
     return null;
   }
-  return candidates[0] ?? null;
+  return candidates[0];
 }
 
 function isInFrequencyWindow(rule: ShuttleTimetableRuleDto, now: Date, dayStart: Date): boolean {
@@ -197,11 +206,11 @@ function getTomorrowFirstDepartureLabel(
   patternId: number,
   rules: ShuttleTimetableRuleDto[],
   fromNow: Date
-): string | null {
+) {
   for (let add = 1; add <= 7; add += 1) {
     const day: Date = addDays(startOfLocalDay(fromNow), add);
     const sd: ShuttleServiceDay = getServiceDayForLocalDate(day);
-    const first: Date | null = earliestFixedOnDay(patternId, sd, rules, day);
+    const first = earliestFixedOnDay(patternId, sd, rules, day);
     if (first) {
       return formatHm(first);
     }
@@ -230,16 +239,16 @@ export function computeLastShuttleDepartureAt(
   now: Date,
   rules: ShuttleTimetableRuleDto[]
 ): Date | null {
-  const dayStart: Date = startOfLocalDay(now);
-  const dayEnd: Date = addDays(dayStart, 1);
+  const dayStart = startOfLocalDay(now);
+  const dayEnd = addDays(dayStart, 1);
 
-  let cursor: Date = new Date(dayStart.getTime());
-  let last: Date | null = null;
+  let cursor = new Date(dayStart.getTime());
+  let last = null;
 
   // nextDeparture 계산 로직을 그대로 재사용해 "오늘의 마지막 출발"을 찾는다.
   // (규칙/연결 모드가 섞여 있어도 일관되게 동작)
   for (let i = 0; i < 512; i += 1) {
-    const next: Date | null = getNextDepartureInstant(patternId, cursor, rules, 0);
+    const next = getNextDepartureInstant(patternId, cursor, rules, 0);
     if (!next) {
       break;
     }
@@ -270,7 +279,7 @@ export function buildShuttleBoardViewModel(input: BuildShuttleBoardInput): Shutt
     };
   }
 
-  const nextInstant: Date | null = getNextDepartureInstant(patternId, now, rules, 0);
+  const nextInstant = getNextDepartureInstant(patternId, now, rules, 0);
 
   if (nextInstant) {
     return {
@@ -284,7 +293,7 @@ export function buildShuttleBoardViewModel(input: BuildShuttleBoardInput): Shutt
     };
   }
 
-  const tomorrowLabel: string | null = getTomorrowFirstDepartureLabel(patternId, rules, now);
+  const tomorrowLabel = getTomorrowFirstDepartureLabel(patternId, rules, now);
   return {
     patternCode,
     patternNameKo,

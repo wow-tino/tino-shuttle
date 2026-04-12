@@ -107,7 +107,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <TanStackProvider>
-          <div className="max-w-mobile mx-auto min-h-screen w-full pb-[calc(60px+env(safe-area-inset-bottom))]">
+          <div className="max-w-mobile pb-app-shell-padding-bottom mx-auto min-h-screen w-full">
             {children}
             <BottomNavigation />
           </div>
