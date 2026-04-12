@@ -8,150 +8,152 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as SubwayRouteImport } from "./routes/subway";
-import { Route as ShuttleRouteImport } from "./routes/shuttle";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as ApiSubwayRealtimeStationArrivalRouteImport } from "./routes/api/subway/realtime-station-arrival";
-import { Route as ApiShuttleTimeTableRulesRouteImport } from "./routes/api/shuttle/time-table-rules";
-import { Route as ApiShuttlePatternsRouteImport } from "./routes/api/shuttle/patterns";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SubwayRouteImport } from './routes/subway'
+import { Route as ShuttleRouteImport } from './routes/shuttle'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiSubwayRealtimeStationArrivalRouteImport } from './routes/api/subway/realtime-station-arrival'
+import { Route as ApiShuttleTimeTableRulesRouteImport } from './routes/api/shuttle/time-table-rules'
+import { Route as ApiShuttlePatternsRouteImport } from './routes/api/shuttle/patterns'
 
 const SubwayRoute = SubwayRouteImport.update({
-  id: "/subway",
-  path: "/subway",
+  id: '/subway',
+  path: '/subway',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ShuttleRoute = ShuttleRouteImport.update({
-  id: "/shuttle",
-  path: "/shuttle",
+  id: '/shuttle',
+  path: '/shuttle',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
-const ApiSubwayRealtimeStationArrivalRoute = ApiSubwayRealtimeStationArrivalRouteImport.update({
-  id: "/api/subway/realtime-station-arrival",
-  path: "/api/subway/realtime-station-arrival",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const ApiShuttleTimeTableRulesRoute = ApiShuttleTimeTableRulesRouteImport.update({
-  id: "/api/shuttle/time-table-rules",
-  path: "/api/shuttle/time-table-rules",
-  getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const ApiSubwayRealtimeStationArrivalRoute =
+  ApiSubwayRealtimeStationArrivalRouteImport.update({
+    id: '/api/subway/realtime-station-arrival',
+    path: '/api/subway/realtime-station-arrival',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiShuttleTimeTableRulesRoute =
+  ApiShuttleTimeTableRulesRouteImport.update({
+    id: '/api/shuttle/time-table-rules',
+    path: '/api/shuttle/time-table-rules',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiShuttlePatternsRoute = ApiShuttlePatternsRouteImport.update({
-  id: "/api/shuttle/patterns",
-  path: "/api/shuttle/patterns",
+  id: '/api/shuttle/patterns',
+  path: '/api/shuttle/patterns',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/shuttle": typeof ShuttleRoute;
-  "/subway": typeof SubwayRoute;
-  "/api/shuttle/patterns": typeof ApiShuttlePatternsRoute;
-  "/api/shuttle/time-table-rules": typeof ApiShuttleTimeTableRulesRoute;
-  "/api/subway/realtime-station-arrival": typeof ApiSubwayRealtimeStationArrivalRoute;
+  '/': typeof IndexRoute
+  '/shuttle': typeof ShuttleRoute
+  '/subway': typeof SubwayRoute
+  '/api/shuttle/patterns': typeof ApiShuttlePatternsRoute
+  '/api/shuttle/time-table-rules': typeof ApiShuttleTimeTableRulesRoute
+  '/api/subway/realtime-station-arrival': typeof ApiSubwayRealtimeStationArrivalRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/shuttle": typeof ShuttleRoute;
-  "/subway": typeof SubwayRoute;
-  "/api/shuttle/patterns": typeof ApiShuttlePatternsRoute;
-  "/api/shuttle/time-table-rules": typeof ApiShuttleTimeTableRulesRoute;
-  "/api/subway/realtime-station-arrival": typeof ApiSubwayRealtimeStationArrivalRoute;
+  '/': typeof IndexRoute
+  '/shuttle': typeof ShuttleRoute
+  '/subway': typeof SubwayRoute
+  '/api/shuttle/patterns': typeof ApiShuttlePatternsRoute
+  '/api/shuttle/time-table-rules': typeof ApiShuttleTimeTableRulesRoute
+  '/api/subway/realtime-station-arrival': typeof ApiSubwayRealtimeStationArrivalRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/shuttle": typeof ShuttleRoute;
-  "/subway": typeof SubwayRoute;
-  "/api/shuttle/patterns": typeof ApiShuttlePatternsRoute;
-  "/api/shuttle/time-table-rules": typeof ApiShuttleTimeTableRulesRoute;
-  "/api/subway/realtime-station-arrival": typeof ApiSubwayRealtimeStationArrivalRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/shuttle': typeof ShuttleRoute
+  '/subway': typeof SubwayRoute
+  '/api/shuttle/patterns': typeof ApiShuttlePatternsRoute
+  '/api/shuttle/time-table-rules': typeof ApiShuttleTimeTableRulesRoute
+  '/api/subway/realtime-station-arrival': typeof ApiSubwayRealtimeStationArrivalRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/shuttle"
-    | "/subway"
-    | "/api/shuttle/patterns"
-    | "/api/shuttle/time-table-rules"
-    | "/api/subway/realtime-station-arrival";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/shuttle'
+    | '/subway'
+    | '/api/shuttle/patterns'
+    | '/api/shuttle/time-table-rules'
+    | '/api/subway/realtime-station-arrival'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/shuttle"
-    | "/subway"
-    | "/api/shuttle/patterns"
-    | "/api/shuttle/time-table-rules"
-    | "/api/subway/realtime-station-arrival";
+    | '/'
+    | '/shuttle'
+    | '/subway'
+    | '/api/shuttle/patterns'
+    | '/api/shuttle/time-table-rules'
+    | '/api/subway/realtime-station-arrival'
   id:
-    | "__root__"
-    | "/"
-    | "/shuttle"
-    | "/subway"
-    | "/api/shuttle/patterns"
-    | "/api/shuttle/time-table-rules"
-    | "/api/subway/realtime-station-arrival";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/shuttle'
+    | '/subway'
+    | '/api/shuttle/patterns'
+    | '/api/shuttle/time-table-rules'
+    | '/api/subway/realtime-station-arrival'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  ShuttleRoute: typeof ShuttleRoute;
-  SubwayRoute: typeof SubwayRoute;
-  ApiShuttlePatternsRoute: typeof ApiShuttlePatternsRoute;
-  ApiShuttleTimeTableRulesRoute: typeof ApiShuttleTimeTableRulesRoute;
-  ApiSubwayRealtimeStationArrivalRoute: typeof ApiSubwayRealtimeStationArrivalRoute;
+  IndexRoute: typeof IndexRoute
+  ShuttleRoute: typeof ShuttleRoute
+  SubwayRoute: typeof SubwayRoute
+  ApiShuttlePatternsRoute: typeof ApiShuttlePatternsRoute
+  ApiShuttleTimeTableRulesRoute: typeof ApiShuttleTimeTableRulesRoute
+  ApiSubwayRealtimeStationArrivalRoute: typeof ApiSubwayRealtimeStationArrivalRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/subway": {
-      id: "/subway";
-      path: "/subway";
-      fullPath: "/subway";
-      preLoaderRoute: typeof SubwayRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/shuttle": {
-      id: "/shuttle";
-      path: "/shuttle";
-      fullPath: "/shuttle";
-      preLoaderRoute: typeof ShuttleRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/subway/realtime-station-arrival": {
-      id: "/api/subway/realtime-station-arrival";
-      path: "/api/subway/realtime-station-arrival";
-      fullPath: "/api/subway/realtime-station-arrival";
-      preLoaderRoute: typeof ApiSubwayRealtimeStationArrivalRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/shuttle/time-table-rules": {
-      id: "/api/shuttle/time-table-rules";
-      path: "/api/shuttle/time-table-rules";
-      fullPath: "/api/shuttle/time-table-rules";
-      preLoaderRoute: typeof ApiShuttleTimeTableRulesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/shuttle/patterns": {
-      id: "/api/shuttle/patterns";
-      path: "/api/shuttle/patterns";
-      fullPath: "/api/shuttle/patterns";
-      preLoaderRoute: typeof ApiShuttlePatternsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/subway': {
+      id: '/subway'
+      path: '/subway'
+      fullPath: '/subway'
+      preLoaderRoute: typeof SubwayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shuttle': {
+      id: '/shuttle'
+      path: '/shuttle'
+      fullPath: '/shuttle'
+      preLoaderRoute: typeof ShuttleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/subway/realtime-station-arrival': {
+      id: '/api/subway/realtime-station-arrival'
+      path: '/api/subway/realtime-station-arrival'
+      fullPath: '/api/subway/realtime-station-arrival'
+      preLoaderRoute: typeof ApiSubwayRealtimeStationArrivalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shuttle/time-table-rules': {
+      id: '/api/shuttle/time-table-rules'
+      path: '/api/shuttle/time-table-rules'
+      fullPath: '/api/shuttle/time-table-rules'
+      preLoaderRoute: typeof ApiShuttleTimeTableRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/shuttle/patterns': {
+      id: '/api/shuttle/patterns'
+      path: '/api/shuttle/patterns'
+      fullPath: '/api/shuttle/patterns'
+      preLoaderRoute: typeof ApiShuttlePatternsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,16 +164,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiShuttlePatternsRoute: ApiShuttlePatternsRoute,
   ApiShuttleTimeTableRulesRoute: ApiShuttleTimeTableRulesRoute,
   ApiSubwayRealtimeStationArrivalRoute: ApiSubwayRealtimeStationArrivalRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { createStart } from "@tanstack/react-start";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }
