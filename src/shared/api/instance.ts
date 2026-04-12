@@ -5,10 +5,11 @@ import { ApiResponseWithBodySchema } from "./schemas/api-response-with-body-sche
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const baseUrl = isProduction ? process.env.PROD_URL : "http://localhost:3000";
+const localBaseUrl = "http://localhost:3000";
+const baseUrl = isProduction ? (process.env.VITE_PROD_URL ?? localBaseUrl) : localBaseUrl;
 
 const client = ky.create({
-  prefixUrl: `${String(baseUrl).replace(/\/$/, "")}/api`,
+  prefixUrl: `${baseUrl}/api`,
 });
 
 /**
