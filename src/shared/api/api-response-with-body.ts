@@ -4,7 +4,7 @@ const DEFAULT_SUCCESS_MESSAGE = "OK";
 
 export function withSuccessResponse<T>(
   data: T,
-  options?: { message?: string; status?: number },
+  options?: { message?: string; status?: number }
 ): Response {
   const status: number = options?.status ?? 200;
   const message: string = options?.message ?? DEFAULT_SUCCESS_MESSAGE;

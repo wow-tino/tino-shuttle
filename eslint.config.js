@@ -1,11 +1,14 @@
-//  @ts-check
+// @ts-check
 
+import { tanstackConfig } from "@tanstack/eslint-config";
 import tseslintPlugin from "@typescript-eslint/eslint-plugin";
 import tseslintParser from "@typescript-eslint/parser";
-import { tanstackConfig } from "@tanstack/eslint-config";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default [
+  {
+    ignores: ["eslint.config.js", "prettier.config.js", "vite.config.ts"],
+  },
   ...tanstackConfig,
   {
     plugins: {
@@ -14,12 +17,14 @@ export default [
     },
   },
   {
+    files: ["**/*.{js,ts,tsx}"],
     languageOptions: {
       parser: tseslintParser,
     },
     rules: {
       "import/no-cycle": "off",
       "import/order": "off",
+      "import/no-default-export": "error",
       "sort-imports": "off",
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/require-await": "off",
@@ -42,8 +47,5 @@ export default [
         },
       ],
     },
-  },
-  {
-    ignores: ["eslint.config.js", "prettier.config.js"],
   },
 ];
