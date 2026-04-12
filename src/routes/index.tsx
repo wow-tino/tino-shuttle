@@ -17,7 +17,11 @@ export const Route = createFileRoute("/")({
 
 function ShuttleHomeRoute() {
   return (
-    <ErrorBoundary suspenseFallback={<Loading title="탑승 노선을 불러오는 중 이에요..." />}>
+    <ErrorBoundary
+      suspenseFallback={
+        <Loading containerClassName="min-h-app-main" title="탑승 노선을 불러오는 중 이에요..." />
+      }
+    >
       <ShuttleHomeScreen />
     </ErrorBoundary>
   );
