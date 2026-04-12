@@ -5,8 +5,7 @@ import { ApiResponseWithBodySchema } from "./schemas/api-response-with-body-sche
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const localBaseUrl = "http://localhost:3000";
-const baseUrl = isProduction ? (process.env.VITE_PROD_URL ?? localBaseUrl) : localBaseUrl;
+const baseUrl = isProduction ? "https://tino-shuttle.kro.kr" : "http://localhost:3000";
 
 const client = ky.create({
   prefixUrl: `${baseUrl}/api`,
