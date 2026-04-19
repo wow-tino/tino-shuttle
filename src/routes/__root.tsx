@@ -50,6 +50,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "티노 셔틀",
       },
       {
+        property: "og:site_name",
+        content: "티노 셔틀",
+      },
+      {
         property: "og:description",
         content:
           "기다림 없는 실시간 셔틀 버스 정보, 티노 셔틀에서 확인하세요. 노선도 및 도착 예정 시간을 제공합니다.",
