@@ -26,7 +26,7 @@ export function BottomNavigation() {
   const { pathname } = useLocation();
 
   return (
-    <div className="max-w-mobile fixed right-0 bottom-0 left-0 z-999 mx-auto bg-white pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-sm">
+    <div className="max-w-mobile fixed right-0 bottom-0 left-0 z-999 mx-auto bg-white pt-2 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-sm">
       <div className="flex text-xs">
         {ROUTES.map((route) => (
           <Link
