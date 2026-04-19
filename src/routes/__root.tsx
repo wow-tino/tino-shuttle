@@ -9,6 +9,8 @@ import { GlobalError } from "#/shared/components/global/global-error";
 import { GlobalNotFound } from "#/shared/components/global/global-not-found";
 import { NaverMapsRootProvider, TanStackProvider } from "#/shared/components/provider";
 import { GoogleAnalyticsProvider } from "#/shared/components/provider/google-analytics-provider";
+import { PwaServiceWorkerRegister } from "#/shared/components/pwa-service-worker-register";
+import { appleSplashScreenLinks } from "#/shared/constants/apple-splash-screen-links";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -79,6 +81,22 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content:
           "기다림 없는 실시간 셔틀 버스 정보, 티노 셔틀에서 확인하세요. 노선도 및 도착 예정 시간을 제공합니다.",
       },
+      {
+        name: "theme-color",
+        content: "#F6F9FC",
+      },
+      {
+        name: "apple-mobile-web-app-capable",
+        content: "yes",
+      },
+      {
+        name: "apple-mobile-web-app-title",
+        content: "티노 셔틀",
+      },
+      {
+        name: "apple-mobile-web-app-status-bar-style",
+        content: "default",
+      },
     ],
     links: [
       {
@@ -89,6 +107,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         rel: "icon",
         href: "/favicon.ico",
       },
+      {
+        rel: "manifest",
+        href: "/manifest.webmanifest",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/pwa-192.webp",
+      },
+      ...appleSplashScreenLinks,
     ],
   }),
   shellComponent: RootDocument,
@@ -116,6 +143,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <BottomNavigation />
           </div>
         </TanStackProvider>
+        <PwaServiceWorkerRegister />
         <Scripts />
       </body>
     </html>
