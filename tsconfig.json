@@ -11,7 +11,7 @@
       "@/*": ["./src/*"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "@types/navermaps"],
+    "types": ["vite/client", "vite-plugin-pwa/client", "@types/navermaps"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
