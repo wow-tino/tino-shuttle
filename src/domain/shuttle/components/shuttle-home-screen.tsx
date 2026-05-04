@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 
 import { useSuspenseQueries } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
+
+import { SHUTTLE_BOARDING_MAP_MIN_HEIGHT_PX } from "../constants/boarding-map";
 
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
 import { ShuttleBoardingMap } from "#/domain/shuttle/components/shuttle-boarding-map";
@@ -94,7 +96,18 @@ export function ShuttleHomeScreen() {
               >
                 <div className="space-y-2">
                   <h3 className="text-foreground text-sm font-medium">탑승 위치</h3>
-                  <ShuttleBoardingMap pattern={selectedPattern} referenceInstant={now} />
+                  <ClientOnly
+                    fallback={
+                      <div
+                        className="animate-pulse bg-gray-100"
+                        style={{
+                          height: SHUTTLE_BOARDING_MAP_MIN_HEIGHT_PX,
+                        }}
+                      />
+                    }
+                  >
+                    <ShuttleBoardingMap pattern={selectedPattern} referenceInstant={now} />
+                  </ClientOnly>
                 </div>
                 <ShuttleTimeList pattern={selectedPattern} rules={rules} />
               </div>

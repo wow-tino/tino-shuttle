@@ -21,6 +21,10 @@ export function ShuttleBoardingMap({ pattern, referenceInstant }: ShuttleBoardin
   );
 
   useEffect(() => {
+    if (typeof window.naver === "undefined") {
+      console.error("Naver Maps is not loaded");
+      return;
+    }
     const naverMap = new window.naver.maps.Map("map", {
       center: new naver.maps.LatLng(latitude, longitude),
       zoom: SHUTTLE_BOARDING_MAP_DEFAULT_ZOOM,
@@ -30,6 +34,10 @@ export function ShuttleBoardingMap({ pattern, referenceInstant }: ShuttleBoardin
       position: new window.naver.maps.LatLng(latitude, longitude),
       map: naverMap,
     });
+
+    return () => {
+      naverMap.destroy();
+    };
   }, [latitude, longitude]);
 
   return <div key={pattern.id} id="map" style={{ height: SHUTTLE_BOARDING_MAP_MIN_HEIGHT_PX }} />;
