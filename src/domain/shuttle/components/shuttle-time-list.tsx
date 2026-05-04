@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { ClientOnly } from "@tanstack/react-router";
+
 import type { ShuttlePatternDto, ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
 import {
   buildShuttleBoardViewModel,
@@ -187,15 +189,17 @@ export function ShuttleTimeList({ pattern, rules }: ShuttleTimeListProps) {
             </span>
           )}
         </div>
-        {shouldShowCountdown && (
-          <p
-            className="text-muted-foreground text-sm tabular-nums"
-            aria-live="polite"
-            aria-label="출발까지 남은 시간"
-          >
-            {countdownLabel === "곧 출발" ? "곧 출발" : `약 ${countdownLabel} 후`}
-          </p>
-        )}
+        <ClientOnly>
+          {shouldShowCountdown && (
+            <p
+              className="text-muted-foreground text-sm tabular-nums"
+              aria-live="polite"
+              aria-label="출발까지 남은 시간"
+            >
+              {countdownLabel === "곧 출발" ? "곧 출발" : `약 ${countdownLabel} 후`}
+            </p>
+          )}
+        </ClientOnly>
 
         {nextNextDepartureLabel !== null && (
           <p className="text-muted-foreground text-sm" aria-label="다음 출발 시각">
