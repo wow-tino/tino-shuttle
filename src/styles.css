@@ -57,9 +57,12 @@
   --tracking-normal: -0.01em;
   --spacing: 0.25rem;
 
-  --app-bottom-nav-offset: 60px;
-  --app-shell-padding-bottom: calc(var(--app-bottom-nav-offset) + env(safe-area-inset-bottom));
-  --app-main-min-height: calc(100dvh - var(--app-bottom-nav-offset) - env(safe-area-inset-bottom));
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-right: env(safe-area-inset-right);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-left: env(safe-area-inset-left);
+
+  --bottom-nav-offset: calc(60px + var(--safe-area-bottom));
 }
 
 @theme inline {
@@ -74,11 +77,9 @@
   --color-line-suin-bundang: oklch(0.777057 0.160775 80.3719);
 
   --spacing-mobile: var(--mobile);
-  --spacing-app-shell-padding-bottom: var(--app-shell-padding-bottom);
-  --spacing-app-main-min-height: var(--app-main-min-height);
-
-  /* min-h-app-main — 로딩/전체 높이 콘텐츠가 탭에 가리지 않도록 */
-  --min-height-app-main: var(--app-main-min-height);
+  --spacing-safe-area-bottom: var(--safe-area-bottom);
+  --spacing-safe-area-top: var(--safe-area-top);
+  --spacing-bottom-nav-offset: var(--bottom-nav-offset);
 
   /* shadcn UI 정의 */
   --color-background: var(--background);
