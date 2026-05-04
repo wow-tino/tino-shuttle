@@ -6,12 +6,12 @@
 
 :root {
   --mobile: 852px;
-  --background: oklch(0.98 0.005 255.25);
-  --foreground: oklch(0.15 0.05 255.25);
+  --background: oklch(0.9787 0.0057 264.53);
+  --foreground: oklch(0.235 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.05 255.25);
+  --card-foreground: oklch(0.235 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.05 255.25);
+  --popover-foreground: oklch(0.235 0 0);
   --primary: oklch(0.4622 0.1452 255.25);
   --primary-foreground: oklch(0.9965 0.0017 247.84);
   --secondary: oklch(0.92 0.03 255.25);
@@ -30,8 +30,8 @@
   --chart-3: oklch(0.45 0.12 180);
   --chart-4: oklch(0.75 0.1 240);
   --chart-5: oklch(0.6 0.18 280);
-  --sidebar: oklch(0.98 0.005 255.25);
-  --sidebar-foreground: oklch(0.15 0.05 255.25);
+  --sidebar: oklch(0.9787 0.0057 264.53);
+  --sidebar-foreground: oklch(0.235 0 0);
   --sidebar-primary: oklch(0.4622 0.1452 255.25);
   --sidebar-primary-foreground: oklch(0.9965 0.0017 247.84);
   --sidebar-accent: oklch(0.92 0.03 255.25);
@@ -63,10 +63,24 @@
 }
 
 @theme inline {
+  /* 디자인 시스템 기반 색상 */
+  --color-background-selected: oklch(0.9195 0.0305 254.32);
+  --color-black: oklch(0.235 0 0);
+  --color-dark-black: oklch(0.6764 0 0);
+  --color-tu-blue: oklch(0.4671 0.1435 256.38);
+  --color-tu-sky-blue: oklch(0.6207 0.1424 240.61);
+  --color-tu-mint: oklch(0.7043 0.1231 212.86);
+  --color-line-number4: oklch(0.7314 0.1435 228.58);
+  --color-line-suin-bundang: oklch(0.777057 0.160775 80.3719);
+
   --spacing-mobile: var(--mobile);
   --spacing-app-shell-padding-bottom: var(--app-shell-padding-bottom);
   --spacing-app-main-min-height: var(--app-main-min-height);
 
+  /* min-h-app-main — 로딩/전체 높이 콘텐츠가 탭에 가리지 않도록 */
+  --min-height-app-main: var(--app-main-min-height);
+
+  /* shadcn UI 정의 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -122,14 +136,25 @@
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
   --tracking-wider: calc(var(--tracking-normal) + 0.05em);
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
-
-  /* min-h-app-main — 로딩/전체 높이 콘텐츠가 탭에 가리지 않도록 */
-  --min-height-app-main: var(--app-main-min-height);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+
+    /* 텍스트 선택 방지 */
+    -ms-user-select: none;
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+
+    /* 스크롤바 숨기기 */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   html,
@@ -142,4 +167,24 @@
   body {
     @apply bg-background text-foreground m-0 min-h-screen p-0 font-sans tracking-normal;
   }
+
+  /* 이미지 드래그 방지 */
+  img {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    pointer-events: auto;
+  }
+}
+
+@utility content-border {
+  border: 1.5px solid oklch(0.9037 0 0);
+  border-radius: 12px;
+}
+
+@utility border-light-gray {
+  border: 1px solid oklch(0.9461 0 0);
+}
+
+@utility border-dark-gray {
+  border: 1px solid oklch(0.6764 0 0);
 }
