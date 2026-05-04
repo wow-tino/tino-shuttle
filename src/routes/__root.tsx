@@ -9,6 +9,7 @@ import { GlobalError } from "#/shared/components/global/global-error";
 import { GlobalNotFound } from "#/shared/components/global/global-not-found";
 import { NaverMapsRootProvider, TanStackProvider } from "#/shared/components/provider";
 import { GoogleAnalyticsProvider } from "#/shared/components/provider/google-analytics-provider";
+import { WebViewEnvironmentProvider } from "#/shared/components/provider/web-view-environment-provider";
 import { PwaServiceWorkerRegister } from "#/shared/components/pwa-service-worker-register";
 import { appleSplashScreenLinks } from "#/shared/constants/apple-splash-screen-links";
 
@@ -28,7 +29,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         name: "viewport",
-        content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+        content:
+          "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
       },
       {
         title: "티노 셔틀 | 스마트한 셔틀 버스 조회",
@@ -90,6 +92,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "yes",
       },
       {
+        name: "mobile-web-app-capable",
+        content: "yes",
+      },
+      {
         name: "apple-mobile-web-app-title",
         content: "티노 셔틀",
       },
@@ -137,12 +143,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <GoogleAnalyticsProvider />
       </head>
       <body>
-        <TanStackProvider>
-          <div className="max-w-mobile pb-app-shell-padding-bottom mx-auto min-h-screen w-full">
-            {children}
-            <BottomNavigation />
-          </div>
-        </TanStackProvider>
+        <WebViewEnvironmentProvider>
+          <TanStackProvider>
+            <div className="max-w-mobile pt-safe-area-top pb-bottom-nav-offset mx-auto min-h-screen w-full">
+              {children}
+              <BottomNavigation />
+            </div>
+          </TanStackProvider>
+        </WebViewEnvironmentProvider>
         <PwaServiceWorkerRegister />
         <Scripts />
       </body>
