@@ -1,20 +1,11 @@
-import { useMemo } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { useSuspenseQueries } from "@tanstack/react-query";
-import { ClientOnly, Link } from "@tanstack/react-router";
-
-import { SHUTTLE_BOARDING_MAP_MIN_HEIGHT_PX } from "../constants/boarding-map";
-
+import lineNumber4Icon from "/icons/line-number4.svg";
+import lineSuinBundangIcon from "/icons/line-suin-bundang.svg";
+import reloadIcon from "/icons/reload.svg";
+import swapIcon from "/icons/swap.svg";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
-import { ShuttleBoardingMap } from "#/domain/shuttle/components/shuttle-boarding-map";
-import { ShuttleTimeList } from "#/domain/shuttle/components/shuttle-time-list";
-import { useSelectedShuttlePatternStore } from "#/domain/shuttle/hooks/use-selected-shuttle-pattern-store";
-import { SubwayArrivalHomePreview } from "#/domain/subway/components/subway-arrival-home-preview";
 import { Button } from "#/shared/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "#/shared/components/card";
-import { ErrorBoundary } from "#/shared/components/error-boundary";
-import { Label } from "#/shared/components/label";
-import { Loading } from "#/shared/components/loading";
 import {
   Select,
   SelectContent,
@@ -22,117 +13,192 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/shared/components/select";
-import { resolveSelectedPattern } from "#/shared/utils";
-
-const now = new Date();
+import { Txt } from "#/shared/components/txt";
 
 export function ShuttleHomeScreen() {
-  const { selectedPatternCode, setSelectedPatternCode } = useSelectedShuttlePatternStore();
+  const { data } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttlePatterns());
 
-  const [patternsQuery, rulesQuery] = useSuspenseQueries({
-    queries: [SHUTTLE_QUERIES.GetShuttlePatterns(), SHUTTLE_QUERIES.GetShuttleTimetableRules()],
-  });
-
-  const patterns = patternsQuery.data.patterns;
-  const rules = rulesQuery.data.rules;
-
-  const selectedPattern = useMemo(() => {
-    if (patterns.length === 0) {
-      return null;
-    }
-    return resolveSelectedPattern(patterns, selectedPatternCode);
-  }, [patterns, selectedPatternCode]);
+  const patterns = data.patterns;
 
   return (
-    <main className="flex flex-col gap-6 p-6">
-      <div className="space-y-2">
-        <h1 className="text-foreground text-xl font-semibold tracking-tight">티노 셔틀</h1>
-        <p className="text-muted-foreground text-sm">
-          등/하교 셔틀과 전철 도착을 한 화면에서 확인할 수 있어요.
-        </p>
-      </div>
-
-      <Card aria-label="셔틀 다음 출발 요약">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">셔틀</CardTitle>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            탑승 노선을 선택하면 탑승 위치와 다음 버스 시각을 보여줍니다. 오늘 전체 시간표는 셔틀
-            탭에서 확인하세요.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-0">
-          {selectedPattern ? (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="shuttle-pattern-select">탑승 노선</Label>
-                <Select
-                  value={selectedPattern.code}
-                  onValueChange={(code: string) => {
-                    setSelectedPatternCode(code);
-                  }}
-                >
-                  <SelectTrigger
-                    id="shuttle-pattern-select"
-                    className="w-full min-w-0"
-                    aria-label="탑승 노선 선택"
-                  >
-                    <SelectValue placeholder="노선을 선택하세요">
-                      {selectedPattern.nameKo}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patterns.map((p) => (
-                      <SelectItem key={p.code} value={p.code}>
-                        {p.nameKo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+    <main className="flex flex-col py-8">
+      <section className="space-y-[25px] px-7">
+        <div className="space-y-2">
+          <Txt typography="h1-title">티노 셔틀</Txt>
+          <Txt typography="p">등/하교 셔틀을 한눈에 확인하세요.</Txt>
+        </div>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5">
+          <div className="col-start-1 row-span-2 row-start-1 grid min-h-0 min-w-0 grid-rows-subgrid">
+            <div className="relative row-start-1 flex items-center justify-center">
               <div
-                className="border-border/60 mt-5 space-y-4 border-t pt-5"
-                aria-label={`${selectedPattern.nameKo} 노선 탑승 정보`}
-              >
-                <div className="space-y-2">
-                  <h3 className="text-foreground text-sm font-medium">탑승 위치</h3>
-                  <ClientOnly
-                    fallback={
-                      <div
-                        className="animate-pulse bg-gray-100"
-                        style={{
-                          height: SHUTTLE_BOARDING_MAP_MIN_HEIGHT_PX,
-                        }}
-                      />
-                    }
-                  >
-                    <ShuttleBoardingMap pattern={selectedPattern} referenceInstant={now} />
-                  </ClientOnly>
+                aria-hidden
+                className="absolute top-1/2 -bottom-1.5 left-1/2 w-0.5 -translate-x-1/2 bg-[#d0d0d0]"
+              />
+              <div className="relative z-10 flex size-3.5 items-center justify-center rounded-full bg-[#2959A34D]">
+                <div className="bg-tu-blue flex size-2.5 items-center justify-center rounded-full">
+                  <div className="size-1 rounded-full bg-white" />
                 </div>
-                <ShuttleTimeList pattern={selectedPattern} rules={rules} />
               </div>
-
-              <div className="mt-4 flex justify-end">
-                <Button variant="link" size="sm" asChild>
-                  <Link to="/shuttle" aria-label="셔틀 탭에서 전체 시간표 보기">
-                    셔틀 전체 보기
-                  </Link>
-                </Button>
+            </div>
+            <div className="relative row-start-2 flex items-center justify-center">
+              <div
+                aria-hidden
+                className="absolute -top-1.5 bottom-1/2 left-1/2 w-0.5 -translate-x-1/2 bg-[#d0d0d0]"
+              />
+              <div className="relative z-10 flex size-3.5 items-center justify-center rounded-full bg-[#4EB1CA4D]">
+                <div className="bg-tu-mint flex size-2.5 items-center justify-center rounded-full">
+                  <div className="size-1 rounded-full bg-white" />
+                </div>
               </div>
-            </>
-          ) : (
-            <p className="text-muted-foreground text-sm" role="status">
-              등록된 셔틀 노선이 없습니다.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <ErrorBoundary suspenseFallback={<Loading title="전철 도착 정보를 불러오는 중 이에요..." />}>
-        <SubwayArrivalHomePreview />
-      </ErrorBoundary>
-
-      <p className="mx-auto text-sm text-slate-600">© 2026 tino-shuttle. All rights reserved.</p>
+            </div>
+          </div>
+          <div className="col-start-2 row-start-1 min-w-0">
+            <Select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="노선을 선택하세요" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {patterns.map((p) => (
+                  <SelectItem key={p.code} value={p.code}>
+                    {p.nameKo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="row-span-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="출발지와 도착지 바꾸기"
+            >
+              <img src={swapIcon} alt="swap" />
+            </Button>
+          </div>
+          <div className="col-start-2 row-start-2 min-w-0">
+            <Select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="노선을 선택하세요" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {patterns.map((p) => (
+                  <SelectItem key={p.code} value={p.code}>
+                    {p.nameKo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </section>
+      <div className="bg-light-gray mt-6 mb-5 h-px" />
+      <div className="space-y-4 px-5">
+        <div className="content-border bg-white px-5 py-6">
+          <div className="flex items-center justify-between">
+            <Txt typography="headline">셔틀버스</Txt>
+            <div className="flex items-center gap-2">
+              <Txt className="text-dark-black" typography="caption">
+                18:22
+              </Txt>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="border-gray bg-light-gray rounded-full border-[0.5px]"
+              >
+                <img src={reloadIcon} alt="reload" />
+              </Button>
+            </div>
+          </div>
+          <div className="bg-gray my-3 h-px" />
+          <div className="space-y-3">
+            <div className="space-y-0.5">
+              <Txt typography="caption">가장 빠른 셔틀</Txt>
+              <div className="flex items-end gap-2">
+                <Txt className="text-tu-blue text-[32px] font-semibold">6분 45초</Txt>
+                <Txt typography="p" className="text-dark-black">
+                  후 출발
+                </Txt>
+              </div>
+            </div>
+            <div className="border-light-gray flex items-center justify-between rounded-md bg-[#f8f8f8] px-3.5 py-2.5">
+              <div className="flex items-center gap-1">
+                <Txt typography="caption">다음 셔틀</Txt>
+                <Txt typography="body-bold" className="text-tu-blue">
+                  12분 20초
+                </Txt>
+              </div>
+              <button className="border-tu-blue text-tu-blue text-xxs rounded-full border bg-white px-3 py-1.5 font-medium">
+                셔틀 시간표
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="content-border bg-white px-5 py-6">
+          <div className="flex items-center justify-between">
+            <Txt typography="headline">전철 시간표</Txt>
+            <div className="flex items-center gap-2">
+              <Txt className="text-dark-black" typography="caption">
+                18:22
+              </Txt>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="border-gray bg-light-gray rounded-full border-[0.5px]"
+              >
+                <img src={reloadIcon} alt="reload" />
+              </Button>
+            </div>
+          </div>
+          <div className="bg-gray my-3 h-px" />
+          <div className="flex gap-[18px]">
+            <div className="flex-1 space-y-1">
+              <img src={lineNumber4Icon} alt="line-number4" />
+              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
+                <p className="text-xs">신길온천 방면 (불암산행)</p>
+                <div className="flex items-end gap-1">
+                  <Txt typography="body-bold" className="text-line-number4">
+                    6분 45초
+                  </Txt>
+                  <p className="text-xxs text-dark-black font-light">후 도착</p>
+                </div>
+              </div>
+              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
+                <p className="text-xs">오이도 방면 (오이도행)</p>
+                <div className="flex items-end gap-1">
+                  <Txt typography="body-bold" className="text-line-number4">
+                    6분 45초
+                  </Txt>
+                  <p className="text-xxs text-dark-black font-light">후 도착</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 space-y-1">
+              <img src={lineSuinBundangIcon} alt="line-suin-bundang" />
+              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
+                <p className="text-xs">왕십리 방면 (왕십리행)</p>
+                <div className="flex items-end gap-1">
+                  <Txt typography="body-bold" className="text-line-suin-bundang">
+                    6분 45초
+                  </Txt>
+                  <p className="text-xxs text-dark-black font-light">후 도착</p>
+                </div>
+              </div>
+              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
+                <p className="text-xs">인천 방면 (인천행)</p>
+                <div className="flex items-end gap-1">
+                  <Txt typography="body-bold" className="text-line-suin-bundang">
+                    6분 45초
+                  </Txt>
+                  <p className="text-xxs text-dark-black font-light">후 도착</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }
