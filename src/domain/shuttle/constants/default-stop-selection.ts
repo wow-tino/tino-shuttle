@@ -1,0 +1,7 @@
+const JEONGWANG_STATION_STOP_ID = "1";
+const MAIN_CAMPUS_STOP_ID = "2";
+
+export const DEFAULT_SHUTTLE_STOP_SELECTION = {
+  departure: JEONGWANG_STATION_STOP_ID,
+  arrival: MAIN_CAMPUS_STOP_ID,
+};

@@ -7,9 +7,9 @@ export const ApiResponseWithBodySchema = z.object({
 });
 
 export type ApiResponseWithBody<T = unknown> = {
-  readonly message: string;
-  readonly status: number;
-  readonly data: T | null;
+  message: string;
+  status: number;
+  data: T;
 };
 
 export type ApiResponseWithBodyUnknown = z.infer<typeof ApiResponseWithBodySchema>;

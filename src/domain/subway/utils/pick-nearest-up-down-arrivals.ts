@@ -14,7 +14,7 @@ export function takeUpDownArrivalsByDirection(
   const downLines = [];
 
   for (const item of items) {
-    const direction = item.updnLine ?? "";
+    const direction = item.updnLine;
     if (isUpDirection(direction) && upLines.length < maxPerDirection) {
       upLines.push(item);
     } else if (isDownDirection(direction) && downLines.length < maxPerDirection) {
