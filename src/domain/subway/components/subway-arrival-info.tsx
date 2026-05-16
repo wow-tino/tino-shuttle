@@ -146,7 +146,7 @@ function ShuttleHomeSubwayArrivalItem(input: {
 
 export function SubwayArrival() {
   const { data, refetch, dataUpdatedAt, isFetching } = useQuery(
-    SUBWAY_QUERIES.GetRealtimeStationArrival(SHUTTLE_HOME_SUBWAY_STATION_NAME)
+    SUBWAY_QUERIES.GetPreviewArrival(SHUTTLE_HOME_SUBWAY_STATION_NAME)
   );
 
   const arrivals = data?.arrivals ?? [];

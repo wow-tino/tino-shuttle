@@ -36,7 +36,7 @@ function SubwayHomeStationCard(input: {
 export function SubwayArrivalHomePreview() {
   const queries = useSuspenseQueries({
     queries: SUBWAY_ARRIVAL_STATION_NAMES.map((stationName) =>
-      SUBWAY_QUERIES.GetRealtimeStationArrival(stationName)
+      SUBWAY_QUERIES.GetPreviewArrival(stationName)
     ),
   });
 
