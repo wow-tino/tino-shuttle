@@ -20,3 +20,5 @@ export async function api<T>(path: string, init?: Options): Promise<T> {
   const parsed = ApiResponseWithBodySchema.parse(response);
   return parsed.data as T;
 }
+
+export const apiV2 = client;

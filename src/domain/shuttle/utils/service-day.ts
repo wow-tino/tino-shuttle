@@ -1,4 +1,4 @@
-import type { ShuttleServiceDay } from "#/domain/shuttle/api/models";
+import type { ShuttleServiceDay } from "#/shared/types/shuttle";
 
 export function getServiceDayForLocalDate(reference: Date): ShuttleServiceDay {
   const day: number = reference.getDay();

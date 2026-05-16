@@ -1,5 +1,6 @@
-import type { ShuttleServiceDay, ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
+import type { ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
 import { getServiceDayForLocalDate } from "#/domain/shuttle/utils/service-day";
+import type { ShuttleServiceDay } from "#/shared/types/shuttle";
 import {
   addDays,
   addMinutes,

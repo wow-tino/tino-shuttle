@@ -13,7 +13,7 @@ export function withSuccessResponse<T>(
 }
 
 export function withErrorResponse(message: string, status: number): Response {
-  const body: ApiResponseWithBody<null> = { message, status, data: null };
+  const body = { message, status, data: null, statusText: message };
   return Response.json(body, { status });
 }
 
