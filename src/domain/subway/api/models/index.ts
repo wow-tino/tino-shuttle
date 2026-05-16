@@ -24,6 +24,24 @@ export const RealtimeArrivalItemSchema = z.object({
 
 export type RealtimeArrivalItem = z.infer<typeof RealtimeArrivalItemSchema>;
 
+export const SubwayHomePreviewDirectionArrivalSchema = z.object({
+  directionName: z.enum(["상행", "하행"]),
+  directionLabel: z.string(),
+  arrivalMainText: z.string(),
+  arrivalSuffixText: z.string().nullable(),
+});
+
+export type SubwayHomePreviewDirectionArrival = z.infer<
+  typeof SubwayHomePreviewDirectionArrivalSchema
+>;
+
+export const SubwayHomePreviewLineSchema = z.object({
+  subwayId: z.string(),
+  directions: z.array(SubwayHomePreviewDirectionArrivalSchema),
+});
+
+export type SubwayHomePreviewLine = z.infer<typeof SubwayHomePreviewLineSchema>;
+
 export const SeoulRealtimeStationArrivalApiResponseSchema = z.object({
   errorMessage: z
     .object({
@@ -39,11 +57,10 @@ export type SeoulRealtimeStationArrivalApiResponse = z.infer<
   typeof SeoulRealtimeStationArrivalApiResponseSchema
 >;
 
-export const GetRealtimeStationArrivalResponseSchema = z.object({
+export const GetSubwayHomePreviewResponseSchema = z.object({
   stationName: z.string(),
   arrivals: z.array(RealtimeArrivalItemSchema),
+  lines: z.array(SubwayHomePreviewLineSchema),
 });
 
-export type GetRealtimeStationArrivalResponse = z.infer<
-  typeof GetRealtimeStationArrivalResponseSchema
->;
+export type GetSubwayHomePreviewResponse = z.infer<typeof GetSubwayHomePreviewResponseSchema>;
