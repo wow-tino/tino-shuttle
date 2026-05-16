@@ -1,10 +1,16 @@
+import { useState } from "react";
+
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { ClientOnly } from "@tanstack/react-router";
+
+import { ShuttleInfo } from "./shuttle-info";
 
 import lineNumber4Icon from "/icons/line-number4.svg";
 import lineSuinBundangIcon from "/icons/line-suin-bundang.svg";
-import reloadIcon from "/icons/reload.svg";
+import refreshIcon from "/icons/refresh.svg";
 import swapIcon from "/icons/swap.svg";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
+import { DEFAULT_SHUTTLE_STOP_SELECTION } from "#/domain/shuttle/constants/default-stop-selection";
 import { Button } from "#/shared/components/button";
 import {
   Select,
@@ -14,11 +20,39 @@ import {
   SelectValue,
 } from "#/shared/components/select";
 import { Txt } from "#/shared/components/txt";
+import type { ShuttleServiceDay } from "#/shared/types/shuttle";
 
-export function ShuttleHomeScreen() {
-  const { data } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttlePatterns());
+interface ShuttleHomeScreenProps {
+  weekday: ShuttleServiceDay;
+}
 
-  const patterns = data.patterns;
+export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
+  const [selectedStopId, setSelectedStopId] = useState(DEFAULT_SHUTTLE_STOP_SELECTION);
+
+  const { data } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
+
+  const onSelectDeparture = (id: string) => {
+    const nextStopSelection = {
+      departure: id,
+      arrival: selectedStopId.arrival,
+    };
+    setSelectedStopId(nextStopSelection);
+  };
+  const onSelectArrival = (id: string) => {
+    const nextStopSelection = {
+      departure: selectedStopId.departure,
+      arrival: id,
+    };
+    setSelectedStopId(nextStopSelection);
+  };
+
+  const onSwapStopSelection = () => {
+    const nextStopSelection = {
+      departure: selectedStopId.arrival,
+      arrival: selectedStopId.departure,
+    };
+    setSelectedStopId(nextStopSelection);
+  };
 
   return (
     <main className="flex flex-col py-8">
@@ -53,18 +87,22 @@ export function ShuttleHomeScreen() {
             </div>
           </div>
           <div className="col-start-2 row-start-1 min-w-0">
-            <Select>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="노선을 선택하세요" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {patterns.map((p) => (
-                  <SelectItem key={p.code} value={p.code}>
-                    {p.nameKo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ClientOnly
+              fallback={<div className="h-9 w-full animate-pulse rounded-lg bg-gray-200" />}
+            >
+              <Select value={selectedStopId.departure} onValueChange={onSelectDeparture}>
+                <SelectTrigger className="w-full" disabled={weekday === "SUNDAY"}>
+                  <SelectValue placeholder="노선을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {data.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()} textValue={p.nameKo}>
+                      {p.nameKo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </ClientOnly>
           </div>
           <div className="row-span-2">
             <Button
@@ -72,69 +110,38 @@ export function ShuttleHomeScreen() {
               variant="ghost"
               size="icon-sm"
               aria-label="출발지와 도착지 바꾸기"
+              onClick={onSwapStopSelection}
             >
               <img src={swapIcon} alt="swap" />
             </Button>
           </div>
           <div className="col-start-2 row-start-2 min-w-0">
-            <Select>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="노선을 선택하세요" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {patterns.map((p) => (
-                  <SelectItem key={p.code} value={p.code}>
-                    {p.nameKo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ClientOnly
+              fallback={<div className="h-9 w-full animate-pulse rounded-lg bg-gray-200" />}
+            >
+              <Select value={selectedStopId.arrival} onValueChange={onSelectArrival}>
+                <SelectTrigger className="w-full" disabled={weekday === "SUNDAY"}>
+                  <SelectValue placeholder="노선을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {data.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()} textValue={p.nameKo}>
+                      {p.nameKo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </ClientOnly>
           </div>
         </div>
       </section>
       <div className="bg-light-gray mt-6 mb-5 h-px" />
       <div className="space-y-4 px-5">
-        <div className="content-border bg-white px-5 py-6">
-          <div className="flex items-center justify-between">
-            <Txt typography="headline">셔틀버스</Txt>
-            <div className="flex items-center gap-2">
-              <Txt className="text-dark-black" typography="caption">
-                18:22
-              </Txt>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="border-gray bg-light-gray rounded-full border-[0.5px]"
-              >
-                <img src={reloadIcon} alt="reload" />
-              </Button>
-            </div>
-          </div>
-          <div className="bg-gray my-3 h-px" />
-          <div className="space-y-3">
-            <div className="space-y-0.5">
-              <Txt typography="caption">가장 빠른 셔틀</Txt>
-              <div className="flex items-end gap-2">
-                <Txt className="text-tu-blue text-[32px] font-semibold">6분 45초</Txt>
-                <Txt typography="p" className="text-dark-black">
-                  후 출발
-                </Txt>
-              </div>
-            </div>
-            <div className="border-light-gray flex items-center justify-between rounded-md bg-[#f8f8f8] px-3.5 py-2.5">
-              <div className="flex items-center gap-1">
-                <Txt typography="caption">다음 셔틀</Txt>
-                <Txt typography="body-bold" className="text-tu-blue">
-                  12분 20초
-                </Txt>
-              </div>
-              <button className="border-tu-blue text-tu-blue text-xxs rounded-full border bg-white px-3 py-1.5 font-medium">
-                셔틀 시간표
-              </button>
-            </div>
-          </div>
-        </div>
+        <ShuttleInfo
+          departure={selectedStopId.departure}
+          arrival={selectedStopId.arrival}
+          weekday={weekday}
+        />
         <div className="content-border bg-white px-5 py-6">
           <div className="flex items-center justify-between">
             <Txt typography="headline">전철 시간표</Txt>
@@ -148,7 +155,7 @@ export function ShuttleHomeScreen() {
                 size="icon-sm"
                 className="border-gray bg-light-gray rounded-full border-[0.5px]"
               >
-                <img src={reloadIcon} alt="reload" />
+                <img src={refreshIcon} alt="refresh" />
               </Button>
             </div>
           </div>
