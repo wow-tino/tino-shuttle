@@ -2,8 +2,8 @@ import type { RealtimeArrivalItem } from "#/domain/subway/api/models";
 
 /** 방향 그룹 안에서 열차 한 편성(종착·도착 메시지)만 표시합니다. */
 export function SubwayArrivalDetailLine(input: { readonly arrival: RealtimeArrivalItem }) {
-  const destination = input.arrival.bstatnNm ?? "—";
-  const message = input.arrival.arvlMsg2 ?? "—";
+  const destination = input.arrival.bstatnNm || "—";
+  const message = input.arrival.arvlMsg2 || "—";
   const trainKind = input.arrival.btrainSttus;
   const lineName = input.arrival.trainLineNm;
 

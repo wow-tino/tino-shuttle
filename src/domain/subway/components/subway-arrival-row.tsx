@@ -1,11 +1,11 @@
 import type { RealtimeArrivalItem } from "#/domain/subway/api/models";
 
 export function SubwayArrivalRow(input: {
-  readonly fallbackDirectionLabel: string;
-  readonly arrival: RealtimeArrivalItem | null;
+  fallbackDirectionLabel: string;
+  arrival: RealtimeArrivalItem | null;
 }) {
-  const directionLabel: string =
-    input.arrival?.updnLine && input.arrival.updnLine.length > 0
+  const directionLabel =
+    input.arrival && input.arrival.updnLine.length > 0
       ? input.arrival.updnLine
       : input.fallbackDirectionLabel;
 
@@ -20,10 +20,10 @@ export function SubwayArrivalRow(input: {
     );
   }
 
-  const destination: string = input.arrival.bstatnNm ?? "—";
-  const message: string = input.arrival.arvlMsg2 ?? "—";
-  const trainKind: string | undefined = input.arrival.btrainSttus;
-  const lineName: string | undefined = input.arrival.trainLineNm;
+  const destination = input.arrival.bstatnNm || "—";
+  const message = input.arrival.arvlMsg2 || "—";
+  const trainKind = input.arrival.btrainSttus;
+  const lineName = input.arrival.trainLineNm;
 
   return (
     <div className="border-border/60 flex flex-col gap-0.5 border-b py-2 last:border-b-0 last:border-transparent sm:flex-row sm:items-center sm:justify-between">

@@ -24,7 +24,7 @@ function SubwayDirectionGroup(input: {
         <div role="list" aria-label={`${input.heading} 열차 목록`}>
           {input.arrivals.map((arrival: RealtimeArrivalItem, index: number) => (
             <div
-              key={`${arrival.subwayId ?? ""}-${arrival.recptnDt ?? ""}-${String(index)}`}
+              key={`${arrival.subwayId}-${arrival.updnLine}-${arrival.trainLineNm}-${String(index)}`}
               role="listitem"
             >
               <SubwayArrivalDetailLine arrival={arrival} />

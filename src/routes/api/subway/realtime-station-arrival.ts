@@ -12,6 +12,7 @@ const subwayArrivalCache = new TtlMemoryCache(15_000);
 
 const SEOUL_REALTIME_ARRIVAL_START_INDEX = 1;
 const SEOUL_REALTIME_ARRIVAL_END_INDEX = 40;
+const SQUARE_BRACKET_PATTERN = /\[([^\]]*)\]/g;
 
 function buildSeoulRealtimeStationArrivalUrl(input: {
   readonly apiKey: string;
@@ -61,7 +62,14 @@ export const Route = createFileRoute("/api/subway/realtime-station-arrival")({
             throw new Error(msg);
           }
 
-          const arrivals = parsed.data.realtimeArrivalList ?? [];
+          const arrivals = (parsed.data.realtimeArrivalList ?? []).map((arrival) => ({
+            subwayId: arrival.subwayId ?? "",
+            updnLine: arrival.updnLine ?? "",
+            trainLineNm: arrival.trainLineNm ?? "",
+            bstatnNm: arrival.bstatnNm ?? "",
+            arvlMsg2: (arrival.arvlMsg2 ?? "").replace(SQUARE_BRACKET_PATTERN, "$1"),
+            btrainSttus: arrival.btrainSttus ?? "",
+          }));
           const payload: GetRealtimeStationArrivalResponse = { stationName, arrivals };
           subwayArrivalCache.set(cacheKey, payload);
           return withSuccessResponse(payload);
