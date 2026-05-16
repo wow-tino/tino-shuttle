@@ -13,18 +13,25 @@ const subwayArrivalCache = new TtlMemoryCache(15_000);
 const SEOUL_REALTIME_ARRIVAL_START_INDEX = 1;
 const SEOUL_REALTIME_ARRIVAL_END_INDEX = 40;
 const SQUARE_BRACKET_PATTERN = /\[([^\]]*)\]/g;
+const NTH_PREV_STATION_HEAD_PATTERN = /^(\d+)번째\s*전역/;
 
-function buildSeoulRealtimeStationArrivalUrl(input: {
-  readonly apiKey: string;
-  readonly stationName: string;
-}): string {
-  const encodedStationName: string = encodeURIComponent(input.stationName);
+function normalizePreviewArrivalMessage(rawMessage: string): string {
+  const trimmed = rawMessage.replace(SQUARE_BRACKET_PATTERN, "$1").trim();
+  const nthPrevStationMatch = trimmed.match(NTH_PREV_STATION_HEAD_PATTERN);
+  if (nthPrevStationMatch?.[1]) {
+    return `${nthPrevStationMatch[1]}번째 전역`;
+  }
+  return trimmed;
+}
+
+function buildSeoulRealtimeStationArrivalUrl(input: { apiKey: string; stationName: string }) {
+  const encodedStationName = encodeURIComponent(input.stationName);
   return `http://swopenapi.seoul.go.kr/api/subway/${input.apiKey}/json/realtimeStationArrival/${SEOUL_REALTIME_ARRIVAL_START_INDEX}/${SEOUL_REALTIME_ARRIVAL_END_INDEX}/${encodedStationName}`;
 }
 
 const subwayApiKey = process.env.SUBWAY_API_KEY ?? "";
 
-export const Route = createFileRoute("/api/subway/realtime-station-arrival")({
+export const Route = createFileRoute("/api/subway/preview")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
@@ -36,7 +43,7 @@ export const Route = createFileRoute("/api/subway/realtime-station-arrival")({
             return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
           }
 
-          const cacheKey = `subway:arrival:${stationName}:v1`;
+          const cacheKey = `subway:arrival:preview:${stationName}:v2`;
           const cached = subwayArrivalCache.get<GetRealtimeStationArrivalResponse>(cacheKey);
           if (cached) {
             return withSuccessResponse(cached);
@@ -67,7 +74,7 @@ export const Route = createFileRoute("/api/subway/realtime-station-arrival")({
             updnLine: arrival.updnLine ?? "",
             trainLineNm: arrival.trainLineNm ?? "",
             bstatnNm: arrival.bstatnNm ?? "",
-            arvlMsg2: (arrival.arvlMsg2 ?? "").replace(SQUARE_BRACKET_PATTERN, "$1"),
+            arvlMsg2: normalizePreviewArrivalMessage(arrival.arvlMsg2 ?? ""),
             btrainSttus: arrival.btrainSttus ?? "",
           }));
           const payload: GetRealtimeStationArrivalResponse = { stationName, arrivals };
