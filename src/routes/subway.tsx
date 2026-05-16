@@ -10,7 +10,7 @@ export const Route = createFileRoute("/subway")({
   loader: async ({ context }) => {
     await Promise.all(
       SUBWAY_ARRIVAL_STATION_NAMES.map((stationName) =>
-        context.queryClient.ensureQueryData(SUBWAY_QUERIES.GetPreviewArrival(stationName))
+        context.queryClient.ensureQueryData(SUBWAY_QUERIES.GetSubwayHomePreview(stationName))
       )
     );
   },

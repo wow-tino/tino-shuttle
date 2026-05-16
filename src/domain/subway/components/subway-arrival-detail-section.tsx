@@ -22,7 +22,7 @@ function SubwayDirectionGroup(input: {
         </p>
       ) : (
         <div role="list" aria-label={`${input.heading} 열차 목록`}>
-          {input.arrivals.map((arrival: RealtimeArrivalItem, index: number) => (
+          {input.arrivals.map((arrival, index) => (
             <div
               key={`${arrival.subwayId}-${arrival.updnLine}-${arrival.trainLineNm}-${String(index)}`}
               role="listitem"
@@ -62,7 +62,7 @@ function SubwayDetailStationCard(input: {
 export function SubwayArrivalDetailSection() {
   const queries = useSuspenseQueries({
     queries: SUBWAY_ARRIVAL_STATION_NAMES.map((stationName) =>
-      SUBWAY_QUERIES.GetPreviewArrival(stationName)
+      SUBWAY_QUERIES.GetSubwayHomePreview(stationName)
     ),
   });
 

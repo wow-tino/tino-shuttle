@@ -1,20 +1,17 @@
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import type { RealtimeArrivalItem } from "#/domain/subway/api/models";
+import type { SubwayHomePreviewLine } from "#/domain/subway/api/models";
 import { SUBWAY_QUERIES } from "#/domain/subway/api/queries";
 import { SubwayArrivalRow } from "#/domain/subway/components/subway-arrival-row";
 import { SUBWAY_ARRIVAL_STATION_NAMES } from "#/domain/subway/constants/stations";
-import { pickNearestUpDownArrivals } from "#/domain/subway/utils/pick-nearest-up-down-arrivals";
 import { Button } from "#/shared/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/shared/components/card";
 
 function SubwayHomeStationCard(input: {
   readonly stationName: string;
-  readonly arrivals: readonly RealtimeArrivalItem[];
+  readonly lines: readonly SubwayHomePreviewLine[];
 }) {
-  const { upLine, downLine } = pickNearestUpDownArrivals(input.arrivals);
-
   return (
     <div
       className="bg-muted/20 rounded-lg border p-3"
@@ -22,12 +19,13 @@ function SubwayHomeStationCard(input: {
     >
       <h3 className="text-foreground mb-2 text-sm font-semibold">{input.stationName}역</h3>
       <div role="list" aria-label={`${input.stationName}역 방향별 도착 요약`}>
-        <div role="listitem">
-          <SubwayArrivalRow fallbackDirectionLabel="상행" arrival={upLine} />
-        </div>
-        <div role="listitem">
-          <SubwayArrivalRow fallbackDirectionLabel="하행" arrival={downLine} />
-        </div>
+        {input.lines.flatMap((subwayLine) =>
+          subwayLine.directions.map((arrival) => (
+            <div key={`${subwayLine.subwayId}-${arrival.directionName}`} role="listitem">
+              <SubwayArrivalRow fallbackDirectionLabel={arrival.directionName} arrival={arrival} />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -36,7 +34,7 @@ function SubwayHomeStationCard(input: {
 export function SubwayArrivalHomePreview() {
   const queries = useSuspenseQueries({
     queries: SUBWAY_ARRIVAL_STATION_NAMES.map((stationName) =>
-      SUBWAY_QUERIES.GetPreviewArrival(stationName)
+      SUBWAY_QUERIES.GetSubwayHomePreview(stationName)
     ),
   });
 
@@ -56,7 +54,7 @@ export function SubwayArrivalHomePreview() {
               <SubwayHomeStationCard
                 key={stationName}
                 stationName={stationName}
-                arrivals={query.data.arrivals}
+                lines={query.data.lines}
               />
             );
           })}
