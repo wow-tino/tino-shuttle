@@ -17,6 +17,7 @@ import {
 import refreshIcon from "/icons/refresh.svg";
 import { Txt } from "#/shared/components/txt";
 import type { ShuttleServiceDay } from "#/shared/types/shuttle";
+import { cn } from "#/shared/utils";
 
 interface ShuttleInfoProps {
   departure: string;
@@ -223,6 +224,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
             aria-label="셔틀 시간 새로고침"
             disabled={isFetching}
             onClick={onRefetchShuttleTimes}
+            className={cn(isFetching && "opacity-50")}
           >
             <img src={refreshIcon} alt="refresh" />
           </button>

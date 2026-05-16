@@ -5,12 +5,10 @@ import { ClientOnly } from "@tanstack/react-router";
 
 import { ShuttleInfo } from "./shuttle-info";
 
-import lineNumber4Icon from "/icons/line-number4.svg";
-import lineSuinBundangIcon from "/icons/line-suin-bundang.svg";
-import refreshIcon from "/icons/refresh.svg";
 import swapIcon from "/icons/swap.svg";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
 import { DEFAULT_SHUTTLE_STOP_SELECTION } from "#/domain/shuttle/constants/default-stop-selection";
+import { SubwayArrival } from "#/domain/subway/components/subway-arrival-info";
 import { Button } from "#/shared/components/button";
 import {
   Select,
@@ -142,69 +140,7 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
           arrival={selectedStopId.arrival}
           weekday={weekday}
         />
-        <div className="content-border bg-white px-5 py-6">
-          <div className="flex items-center justify-between">
-            <Txt typography="headline">전철 시간표</Txt>
-            <div className="flex items-center gap-2">
-              <Txt className="text-dark-black" typography="caption">
-                18:22
-              </Txt>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="border-gray bg-light-gray rounded-full border-[0.5px]"
-              >
-                <img src={refreshIcon} alt="refresh" />
-              </Button>
-            </div>
-          </div>
-          <div className="bg-gray my-3 h-px" />
-          <div className="flex gap-[18px]">
-            <div className="flex-1 space-y-1">
-              <img src={lineNumber4Icon} alt="line-number4" />
-              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
-                <p className="text-xs">신길온천 방면 (불암산행)</p>
-                <div className="flex items-end gap-1">
-                  <Txt typography="body-bold" className="text-line-number4">
-                    6분 45초
-                  </Txt>
-                  <p className="text-xxs text-dark-black font-light">후 도착</p>
-                </div>
-              </div>
-              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
-                <p className="text-xs">오이도 방면 (오이도행)</p>
-                <div className="flex items-end gap-1">
-                  <Txt typography="body-bold" className="text-line-number4">
-                    6분 45초
-                  </Txt>
-                  <p className="text-xxs text-dark-black font-light">후 도착</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 space-y-1">
-              <img src={lineSuinBundangIcon} alt="line-suin-bundang" />
-              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
-                <p className="text-xs">왕십리 방면 (왕십리행)</p>
-                <div className="flex items-end gap-1">
-                  <Txt typography="body-bold" className="text-line-suin-bundang">
-                    6분 45초
-                  </Txt>
-                  <p className="text-xxs text-dark-black font-light">후 도착</p>
-                </div>
-              </div>
-              <div className="bg-background space-y-1 rounded-md px-3 py-2.5">
-                <p className="text-xs">인천 방면 (인천행)</p>
-                <div className="flex items-end gap-1">
-                  <Txt typography="body-bold" className="text-line-suin-bundang">
-                    6분 45초
-                  </Txt>
-                  <p className="text-xxs text-dark-black font-light">후 도착</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SubwayArrival />
       </div>
     </main>
   );
