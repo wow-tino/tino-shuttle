@@ -59,7 +59,7 @@ function ShuttleHomeSubwayArrivalItem(input: {
           {input.arrival.arrivalMainText}
         </Txt>
         {input.arrival.arrivalSuffixText ? (
-          <p className="text-xxs text-dark-black font-light">{input.arrival.arrivalSuffixText}</p>
+          <p className="text-xxs text-dark-gray font-light">{input.arrival.arrivalSuffixText}</p>
         ) : null}
       </div>
     </div>
@@ -83,7 +83,7 @@ export function SubwayArrival() {
       <div className="flex items-center justify-between">
         <Txt typography="headline">전철 시간표</Txt>
         <div className="flex items-center gap-2">
-          <Txt className="text-dark-black" typography="caption">
+          <Txt className="text-dark-gray" typography="caption">
             {updatedTime}
           </Txt>
           <button

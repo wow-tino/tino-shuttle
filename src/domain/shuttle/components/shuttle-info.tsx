@@ -219,7 +219,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
       <div className="flex items-center justify-between">
         <Txt typography="headline">셔틀버스</Txt>
         <div className="flex items-center gap-2">
-          <p className="text-dark-black">{updatedAtLabel}</p>
+          <p className="text-dark-gray">{updatedAtLabel}</p>
           <button
             aria-label="셔틀 시간 새로고침"
             disabled={isFetching}
@@ -239,7 +239,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
               {shuttleInfoDisplay.primaryLabel}
             </Txt>
             {shuttleInfoDisplay.primarySuffix !== null ? (
-              <Txt typography="p" className="text-dark-black">
+              <Txt typography="p" className="text-dark-gray">
                 {shuttleInfoDisplay.primarySuffix}
               </Txt>
             ) : null}
