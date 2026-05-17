@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 
 import { ShuttleInfo } from "./shuttle-info";
@@ -28,6 +28,13 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
   const [selectedStopId, setSelectedStopId] = useState(DEFAULT_SHUTTLE_STOP_SELECTION);
 
   const { data } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
+  const { data: shuttleTimes } = useQuery(
+    SHUTTLE_QUERIES.GetShuttleTimes({
+      departure: selectedStopId.departure,
+      arrival: selectedStopId.arrival,
+      weekday,
+    })
+  );
 
   const onSelectDeparture = (id: string) => {
     const nextStopSelection = {
@@ -52,6 +59,9 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
     setSelectedStopId(nextStopSelection);
   };
 
+  const viaStopNameKo = shuttleTimes?.viaStopNameKo ?? null;
+  const hasViaStop = viaStopNameKo !== null;
+
   return (
     <main className="flex flex-col py-8">
       <section className="space-y-[25px] px-7">
@@ -60,27 +70,16 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
           <Txt typography="p">등/하교 셔틀을 한눈에 확인하세요.</Txt>
         </div>
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5">
-          <div className="col-start-1 row-span-2 row-start-1 grid min-h-0 min-w-0 grid-rows-subgrid">
-            <div className="relative row-start-1 flex items-center justify-center">
+          <div className="relative col-start-1 row-start-1 flex items-center justify-center">
+            {!hasViaStop ? (
               <div
                 aria-hidden
-                className="absolute top-1/2 -bottom-1.5 left-1/2 w-0.5 -translate-x-1/2 bg-[#d0d0d0]"
+                className="bg-gray absolute top-1/2 -bottom-3.5 left-1/2 w-0.5 -translate-x-1/2"
               />
-              <div className="relative z-10 flex size-3.5 items-center justify-center rounded-full bg-[#2959A34D]">
-                <div className="bg-tu-blue flex size-2.5 items-center justify-center rounded-full">
-                  <div className="size-1 rounded-full bg-white" />
-                </div>
-              </div>
-            </div>
-            <div className="relative row-start-2 flex items-center justify-center">
-              <div
-                aria-hidden
-                className="absolute -top-1.5 bottom-1/2 left-1/2 w-0.5 -translate-x-1/2 bg-[#d0d0d0]"
-              />
-              <div className="relative z-10 flex size-3.5 items-center justify-center rounded-full bg-[#4EB1CA4D]">
-                <div className="bg-tu-mint flex size-2.5 items-center justify-center rounded-full">
-                  <div className="size-1 rounded-full bg-white" />
-                </div>
+            ) : null}
+            <div className="bg-tu-blue/30 relative z-10 flex size-3.5 items-center justify-center rounded-full">
+              <div className="bg-tu-blue flex size-2.5 items-center justify-center rounded-full">
+                <div className="size-1 rounded-full bg-white" />
               </div>
             </div>
           </div>
@@ -102,18 +101,40 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
               </Select>
             </ClientOnly>
           </div>
-          <div className="row-span-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="출발지와 도착지 바꾸기"
-              onClick={onSwapStopSelection}
-            >
-              <img src={swapIcon} alt="swap" />
-            </Button>
+          {hasViaStop ? (
+            <>
+              <div className="relative col-start-1 row-start-2 flex items-center justify-center">
+                <div className="bg-tu-sky-blue/30 relative z-10 flex size-3.5 items-center justify-center rounded-full">
+                  <div className="bg-tu-sky-blue flex size-2.5 items-center justify-center rounded-full">
+                    <div className="size-1 rounded-full bg-white" />
+                  </div>
+                </div>
+              </div>
+              <div className="col-start-2 row-start-2 min-w-0">
+                <div className="bg-light-gray border-gray flex h-9 items-center rounded-lg border px-4">
+                  <Txt as="span" typography="body">
+                    {viaStopNameKo}
+                  </Txt>
+                </div>
+              </div>
+            </>
+          ) : null}
+          <div
+            className={`relative col-start-1 flex items-center justify-center ${hasViaStop ? "row-start-3" : "row-start-2"}`}
+          >
+            {!hasViaStop ? (
+              <div
+                aria-hidden
+                className="bg-gray absolute -top-3.5 bottom-1/2 left-1/2 w-0.5 -translate-x-1/2"
+              />
+            ) : null}
+            <div className="bg-tu-mint/30 relative z-10 flex size-3.5 items-center justify-center rounded-full">
+              <div className="bg-tu-mint flex size-2.5 items-center justify-center rounded-full">
+                <div className="size-1 rounded-full bg-white" />
+              </div>
+            </div>
           </div>
-          <div className="col-start-2 row-start-2 min-w-0">
+          <div className={`col-start-2 min-w-0 ${hasViaStop ? "row-start-3" : "row-start-2"}`}>
             <ClientOnly
               fallback={<div className="h-9 w-full animate-pulse rounded-lg bg-gray-200" />}
             >
@@ -130,6 +151,20 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
                 </SelectContent>
               </Select>
             </ClientOnly>
+          </div>
+          <div
+            className="col-start-3 self-center"
+            style={{ gridRow: hasViaStop ? "1 / span 3" : "1 / span 2" }}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="출발지와 도착지 바꾸기"
+              onClick={onSwapStopSelection}
+            >
+              <img src={swapIcon} alt="swap" />
+            </Button>
           </div>
         </div>
       </section>

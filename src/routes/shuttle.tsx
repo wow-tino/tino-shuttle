@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
 import { DEFAULT_SHUTTLE_STOP_SELECTION } from "#/domain/shuttle/constants/default-stop-selection";
 import { getServiceDayForLocalDate } from "#/domain/shuttle/utils/service-day";
-import { TimetableScreen } from "#/domain/timetable/timetable-screen";
+import { TimetableScreen } from "#/domain/timetable/components/timetable-screen";
 import { ErrorBoundary } from "#/shared/components/error-boundary";
 import { Loading } from "#/shared/components/loading";
 
