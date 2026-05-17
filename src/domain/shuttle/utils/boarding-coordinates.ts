@@ -3,9 +3,9 @@ import type { ShuttlePatternDto } from "#/domain/shuttle/api/models";
 export type BoardingCoordinateSource = "day" | "evening";
 
 export interface ResolvedBoardingCoordinates {
-  readonly latitude: number;
-  readonly longitude: number;
-  readonly source: BoardingCoordinateSource;
+  latitude: number;
+  longitude: number;
+  source: BoardingCoordinateSource;
 }
 
 /**
@@ -18,30 +18,37 @@ export function resolveBoardingCoordinates(
   eveningStartHourLocal: number
 ): ResolvedBoardingCoordinates {
   const hourLocal = reference.getHours();
-  const hasEvening =
-    pattern.boardingEveningLatitude !== null && pattern.boardingEveningLongitude !== null;
-  const hasDay = pattern.boardingLatitude !== null && pattern.boardingLongitude !== null;
+  const {
+    boardingLatitude,
+    boardingLongitude,
+    boardingEveningLatitude,
+    boardingEveningLongitude,
+  } = pattern;
 
-  if (hourLocal >= eveningStartHourLocal && hasEvening) {
+  if (
+    hourLocal >= eveningStartHourLocal &&
+    boardingEveningLatitude !== null &&
+    boardingEveningLongitude !== null
+  ) {
     return {
-      latitude: pattern.boardingEveningLatitude,
-      longitude: pattern.boardingEveningLongitude,
+      latitude: boardingEveningLatitude,
+      longitude: boardingEveningLongitude,
       source: "evening",
     };
   }
 
-  if (hasDay) {
+  if (boardingLatitude !== null && boardingLongitude !== null) {
     return {
-      latitude: pattern.boardingLatitude,
-      longitude: pattern.boardingLongitude,
+      latitude: boardingLatitude,
+      longitude: boardingLongitude,
       source: "day",
     };
   }
 
-  if (hasEvening) {
+  if (boardingEveningLatitude !== null && boardingEveningLongitude !== null) {
     return {
-      latitude: pattern.boardingEveningLatitude,
-      longitude: pattern.boardingEveningLongitude,
+      latitude: boardingEveningLatitude,
+      longitude: boardingEveningLongitude,
       source: "evening",
     };
   }
