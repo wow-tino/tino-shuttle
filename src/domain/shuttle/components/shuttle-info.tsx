@@ -25,13 +25,6 @@ interface ShuttleInfoProps {
   weekday: ShuttleServiceDay;
 }
 
-interface ShuttleInfoDisplay {
-  primaryLabel: string;
-  primarySuffix: string | null;
-  secondaryLabel: string;
-  secondaryValue: string | null;
-}
-
 function getWindowPrimaryLabel(kind: GetShuttleTimeProps["kind"]): string {
   if (kind === "ADHOC_WINDOW") {
     return "수시운행";
@@ -110,10 +103,22 @@ function getFollowingRideTimeLabel(following: UpcomingShuttleScheduleEntry | nul
   return getScheduleEntryRideTimeLabel(following);
 }
 
-function getShuttleInfoDisplay(
-  times: GetShuttleTimeProps[],
-  referenceNow: Date
-): ShuttleInfoDisplay {
+interface GetShuttleInfoDisplayProps {
+  times: GetShuttleTimeProps[];
+  referenceNow: Date;
+  weekday: ShuttleServiceDay;
+}
+
+function getShuttleInfoDisplay({ times, referenceNow, weekday }: GetShuttleInfoDisplayProps) {
+  if (weekday === "SUNDAY") {
+    return {
+      primaryLabel: "일요일은 셔틀이 없어요",
+      primarySuffix: null,
+      secondaryLabel: "다음 셔틀",
+      secondaryValue: null,
+    };
+  }
+
   const scheduleEntry = getShuttleScheduleEntryPreview(times, referenceNow);
   const activeWindow = getActiveShuttleWindowPreview(times, referenceNow);
   if (activeWindow.kind === "active") {
@@ -194,7 +199,11 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
     isFetching,
   } = useQuery(SHUTTLE_QUERIES.GetShuttleTimes({ departure, arrival, weekday }));
 
-  const shuttleInfoDisplay = getShuttleInfoDisplay(times ?? [], new Date(currentTimeMs));
+  const shuttleInfoDisplay = getShuttleInfoDisplay({
+    times: times?.times ?? [],
+    referenceNow: new Date(currentTimeMs),
+    weekday,
+  });
 
   const updatedAtLabel = formatDateAsClockHHmm(
     dataUpdatedAt > 0 ? new Date(dataUpdatedAt) : new Date(currentTimeMs)
@@ -219,7 +228,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
       <div className="flex items-center justify-between">
         <Txt typography="headline">셔틀버스</Txt>
         <div className="flex items-center gap-2">
-          <p className="text-dark-black">{updatedAtLabel}</p>
+          <p className="text-dark-gray">{updatedAtLabel}</p>
           <button
             aria-label="셔틀 시간 새로고침"
             disabled={isFetching}
@@ -239,7 +248,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
               {shuttleInfoDisplay.primaryLabel}
             </Txt>
             {shuttleInfoDisplay.primarySuffix !== null ? (
-              <Txt typography="p" className="text-dark-black">
+              <Txt typography="p" className="text-dark-gray">
                 {shuttleInfoDisplay.primarySuffix}
               </Txt>
             ) : null}

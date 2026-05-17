@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 
-import { ShuttleInfo } from "./shuttle-info";
+import { TimetableBoard } from "./timetable-board";
 
 import swapIcon from "/icons/swap.svg";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
@@ -14,7 +14,6 @@ import {
   buildSelectionForSwap,
   normalizeShuttleStopSelection,
 } from "#/domain/shuttle/utils/shuttle-stop-selection";
-import { SubwayArrival } from "#/domain/subway/components/subway-arrival-info";
 import { Button } from "#/shared/components/button";
 import {
   Select,
@@ -26,17 +25,21 @@ import {
 import { Txt } from "#/shared/components/txt";
 import type { ShuttleServiceDay } from "#/shared/types/shuttle";
 
-interface ShuttleHomeScreenProps {
+interface TimetableScreenProps {
   weekday: ShuttleServiceDay;
 }
 
-export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
-  const { data } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
+export function TimetableScreen({ weekday }: TimetableScreenProps) {
+  const { data: shuttleStops } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
   const departure = useSelectedShuttleStopStore((state) => state.departure);
   const arrival = useSelectedShuttleStopStore((state) => state.arrival);
   const setSelectedStopId = useSelectedShuttleStopStore((state) => state.setSelectedStopId);
   const selectedStopId = { departure, arrival };
-  const { data: shuttleTimes } = useQuery(
+  const {
+    data: shuttleTimes,
+    isFetching: isFetchingShuttleTimes,
+    isError: isShuttleTimesError,
+  } = useQuery(
     SHUTTLE_QUERIES.GetShuttleTimes({
       departure: selectedStopId.departure,
       arrival: selectedStopId.arrival,
@@ -45,16 +48,16 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
   );
 
   const onSelectDeparture = (id: string) => {
-    const nextStopSelection = buildSelectionForDepartureChange(selectedStopId, id, data);
+    const nextStopSelection = buildSelectionForDepartureChange(selectedStopId, id, shuttleStops);
     setSelectedStopId(nextStopSelection);
   };
   const onSelectArrival = (id: string) => {
-    const nextStopSelection = buildSelectionForArrivalChange(selectedStopId, id, data);
+    const nextStopSelection = buildSelectionForArrivalChange(selectedStopId, id, shuttleStops);
     setSelectedStopId(nextStopSelection);
   };
 
   const onSwapStopSelection = () => {
-    const nextStopSelection = buildSelectionForSwap(selectedStopId, data);
+    const nextStopSelection = buildSelectionForSwap(selectedStopId, shuttleStops);
     setSelectedStopId(nextStopSelection);
   };
 
@@ -62,19 +65,19 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
   const hasViaStop = viaStopNameKo !== null;
 
   useEffect(() => {
-    const normalizedSelection = normalizeShuttleStopSelection({ departure, arrival }, data);
+    const normalizedSelection = normalizeShuttleStopSelection({ departure, arrival }, shuttleStops);
 
     if (normalizedSelection.departure !== departure || normalizedSelection.arrival !== arrival) {
       setSelectedStopId(normalizedSelection);
     }
-  }, [arrival, data, departure, setSelectedStopId]);
+  }, [arrival, departure, setSelectedStopId, shuttleStops]);
 
   return (
     <main className="flex flex-col py-8">
       <section className="space-y-[25px] px-7">
         <div className="space-y-2">
-          <Txt typography="h1-title">티노 셔틀</Txt>
-          <Txt typography="p">등/하교 셔틀을 한눈에 확인하세요.</Txt>
+          <Txt typography="h1-title">셔틀 시간표</Txt>
+          <Txt typography="p">노선을 선택하고 전체 셔틀 시간표를 확인하세요.</Txt>
         </div>
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5">
           <div className="relative col-start-1 row-start-1 flex items-center justify-center">
@@ -99,7 +102,7 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
                   <SelectValue placeholder="노선을 선택하세요" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  {data.map((p) => (
+                  {shuttleStops.map((p) => (
                     <SelectItem
                       key={p.id}
                       value={p.id.toString()}
@@ -155,7 +158,7 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
                   <SelectValue placeholder="노선을 선택하세요" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  {data.map((p) => (
+                  {shuttleStops.map((p) => (
                     <SelectItem
                       key={p.id}
                       value={p.id.toString()}
@@ -174,26 +177,24 @@ export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
             style={{ gridRow: hasViaStop ? "1 / span 3" : "1 / span 2" }}
           >
             <Button
-              type="button"
               variant="ghost"
               size="icon-sm"
               aria-label="출발지와 도착지 바꾸기"
+              disabled={weekday === "SUNDAY"}
               onClick={onSwapStopSelection}
             >
-              <img src={swapIcon} alt="swap" />
+              <img src={swapIcon} alt="출/도착 교체 아이콘" />
             </Button>
           </div>
         </div>
       </section>
       <div className="bg-light-gray mt-6 mb-5 h-px" />
-      <div className="space-y-4 px-5">
-        <ShuttleInfo
-          departure={selectedStopId.departure}
-          arrival={selectedStopId.arrival}
-          weekday={weekday}
-        />
-        <SubwayArrival />
-      </div>
+      <TimetableBoard
+        shuttleTimes={shuttleTimes?.times}
+        weekday={weekday}
+        isLoading={isFetchingShuttleTimes && shuttleTimes === undefined}
+        isError={isShuttleTimesError}
+      />
     </main>
   );
 }
