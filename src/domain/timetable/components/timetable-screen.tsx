@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useEffect } from "react";
 
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 
 import { TimetableBoard } from "./timetable-board";
-import { DEFAULT_SHUTTLE_STOP_SELECTION } from "../../shuttle/constants/default-stop-selection";
 
 import swapIcon from "/icons/swap.svg";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
+import { useSelectedShuttleStopStore } from "#/domain/shuttle/hooks/use-selected-shuttle-stop-store";
+import {
+  buildSelectionForArrivalChange,
+  buildSelectionForDepartureChange,
+  buildSelectionForSwap,
+  normalizeShuttleStopSelection,
+} from "#/domain/shuttle/utils/shuttle-stop-selection";
 import { Button } from "#/shared/components/button";
 import {
   Select,
@@ -24,9 +30,11 @@ interface TimetableScreenProps {
 }
 
 export function TimetableScreen({ weekday }: TimetableScreenProps) {
-  const [selectedStopId, setSelectedStopId] = useState(DEFAULT_SHUTTLE_STOP_SELECTION);
-
   const { data: shuttleStops } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
+  const departure = useSelectedShuttleStopStore((state) => state.departure);
+  const arrival = useSelectedShuttleStopStore((state) => state.arrival);
+  const setSelectedStopId = useSelectedShuttleStopStore((state) => state.setSelectedStopId);
+  const selectedStopId = { departure, arrival };
   const {
     data: shuttleTimes,
     isFetching: isFetchingShuttleTimes,
@@ -40,30 +48,29 @@ export function TimetableScreen({ weekday }: TimetableScreenProps) {
   );
 
   const onSelectDeparture = (id: string) => {
-    const nextStopSelection = {
-      departure: id,
-      arrival: selectedStopId.arrival,
-    };
+    const nextStopSelection = buildSelectionForDepartureChange(selectedStopId, id, shuttleStops);
     setSelectedStopId(nextStopSelection);
   };
   const onSelectArrival = (id: string) => {
-    const nextStopSelection = {
-      departure: selectedStopId.departure,
-      arrival: id,
-    };
+    const nextStopSelection = buildSelectionForArrivalChange(selectedStopId, id, shuttleStops);
     setSelectedStopId(nextStopSelection);
   };
 
   const onSwapStopSelection = () => {
-    const nextStopSelection = {
-      departure: selectedStopId.arrival,
-      arrival: selectedStopId.departure,
-    };
+    const nextStopSelection = buildSelectionForSwap(selectedStopId, shuttleStops);
     setSelectedStopId(nextStopSelection);
   };
 
   const viaStopNameKo = shuttleTimes?.viaStopNameKo ?? null;
   const hasViaStop = viaStopNameKo !== null;
+
+  useEffect(() => {
+    const normalizedSelection = normalizeShuttleStopSelection({ departure, arrival }, shuttleStops);
+
+    if (normalizedSelection.departure !== departure || normalizedSelection.arrival !== arrival) {
+      setSelectedStopId(normalizedSelection);
+    }
+  }, [arrival, departure, setSelectedStopId, shuttleStops]);
 
   return (
     <main className="flex flex-col py-8">
@@ -96,7 +103,12 @@ export function TimetableScreen({ weekday }: TimetableScreenProps) {
                 </SelectTrigger>
                 <SelectContent position="popper">
                   {shuttleStops.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()} textValue={p.nameKo}>
+                    <SelectItem
+                      key={p.id}
+                      value={p.id.toString()}
+                      textValue={p.nameKo}
+                      disabled={arrival === p.id.toString()}
+                    >
                       {p.nameKo}
                     </SelectItem>
                   ))}
@@ -147,7 +159,12 @@ export function TimetableScreen({ weekday }: TimetableScreenProps) {
                 </SelectTrigger>
                 <SelectContent position="popper">
                   {shuttleStops.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()} textValue={p.nameKo}>
+                    <SelectItem
+                      key={p.id}
+                      value={p.id.toString()}
+                      textValue={p.nameKo}
+                      disabled={departure === p.id.toString()}
+                    >
                       {p.nameKo}
                     </SelectItem>
                   ))}
