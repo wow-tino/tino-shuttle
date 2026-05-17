@@ -1,4 +1,4 @@
-import type { GetShuttleTimesResponse } from "#/domain/shuttle/api/models";
+import type { GetShuttleTimeProps } from "#/domain/shuttle/api/models";
 import { parsePgTimeOnLocalDay, startOfLocalDay } from "#/shared/utils";
 
 export type TimetableMinuteStatus = "past" | "current" | "future";
@@ -19,10 +19,11 @@ export interface TimetableHourGroup {
   minutes: TimetableMinuteItem[];
 }
 
-interface TimetableNotice {
+export interface TimetableNotice {
   id: number;
   label: string;
   message: string;
+  status: TimetableMinuteStatus;
 }
 
 interface FixedDepartureEntry {
@@ -75,8 +76,38 @@ function getTimetableHourStatus(minutes: TimetableMinuteItem[]) {
   return "future";
 }
 
+function getTimetableNoticeStatus(
+  dayStart: Date,
+  windowStart: string | null,
+  windowEnd: string | null,
+  referenceNow: Date
+): TimetableMinuteStatus {
+  if (windowStart === null || windowEnd === null) {
+    return "future";
+  }
+
+  const windowStartAt = parsePgTimeOnLocalDay(dayStart, windowStart);
+  const windowEndAt = parsePgTimeOnLocalDay(dayStart, windowEnd);
+
+  if (windowStartAt === null || windowEndAt === null) {
+    return "future";
+  }
+
+  const referenceTime = referenceNow.getTime();
+
+  if (windowStartAt.getTime() <= referenceTime && referenceTime <= windowEndAt.getTime()) {
+    return "current";
+  }
+
+  if (windowEndAt.getTime() < referenceTime) {
+    return "past";
+  }
+
+  return "future";
+}
+
 export function buildTimetableHourGroups(
-  shuttleTimes: GetShuttleTimesResponse,
+  shuttleTimes: GetShuttleTimeProps[],
   referenceNow: Date
 ) {
   const dayStart = startOfLocalDay(referenceNow);
@@ -103,17 +134,24 @@ export function buildTimetableHourGroups(
         id: shuttleTime.id,
         label: buildNoticeLabel(shuttleTime.windowStart, shuttleTime.windowEnd),
         message: shuttleTime.message ?? "정해진 시각 없이 운행 중입니다.",
+        status: getTimetableNoticeStatus(
+          dayStart,
+          shuttleTime.windowStart,
+          shuttleTime.windowEnd,
+          referenceNow
+        ),
       });
     }
   });
 
+  const hasActiveNotice = notices.some((notice) => notice.status === "current");
   const sortedFixedDepartures = [...fixedDepartures].sort(
     (leftDeparture, rightDeparture) =>
       leftDeparture.departureAt.getTime() - rightDeparture.departureAt.getTime()
   );
-  const nextDeparture = sortedFixedDepartures.find(
-    (departure) => departure.departureAt.getTime() >= referenceNow.getTime()
-  );
+  const nextDeparture = hasActiveNotice
+    ? null
+    : sortedFixedDepartures.find((departure) => departure.departureAt.getTime() >= referenceNow.getTime());
   const hourGroupsByHour = new Map<number, FixedDepartureEntry[]>();
 
   sortedFixedDepartures.forEach((departure) => {
