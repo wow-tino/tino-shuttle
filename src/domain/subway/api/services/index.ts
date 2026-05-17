@@ -3,6 +3,7 @@ import type {
   GetSubwayHomePreviewResponse,
 } from "#/domain/subway/api/models";
 import { api } from "#/shared/api";
+import { apiV2 } from "#/shared/api/instance";
 
 export const getSubwayHomePreview = async (stationName: string) => {
   return api<GetSubwayHomePreviewResponse>(`subway/preview`, {
@@ -11,7 +12,7 @@ export const getSubwayHomePreview = async (stationName: string) => {
 };
 
 export const getSubwayArrival = async (stationName: string) => {
-  return api<GetSubwayArrivalResponse>(`subway/arrival`, {
+  return apiV2<GetSubwayArrivalResponse>(`subway/arrival`, {
     searchParams: { stationName },
-  });
+  }).json();
 };
