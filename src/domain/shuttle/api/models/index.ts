@@ -85,6 +85,9 @@ export const GetShuttleTimePropsSchema = z.object({
 
 export type GetShuttleTimeProps = z.infer<typeof GetShuttleTimePropsSchema>;
 
-export const GetShuttleTimesResponseSchema = z.array(GetShuttleTimePropsSchema);
+export const GetShuttleTimesResponseSchema = z.object({
+  viaStopNameKo: z.string().nullable(),
+  times: z.array(GetShuttleTimePropsSchema),
+});
 
 export type GetShuttleTimesResponse = z.infer<typeof GetShuttleTimesResponseSchema>;

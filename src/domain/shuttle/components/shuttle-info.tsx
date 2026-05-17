@@ -194,7 +194,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
     isFetching,
   } = useQuery(SHUTTLE_QUERIES.GetShuttleTimes({ departure, arrival, weekday }));
 
-  const shuttleInfoDisplay = getShuttleInfoDisplay(times ?? [], new Date(currentTimeMs));
+  const shuttleInfoDisplay = getShuttleInfoDisplay(times?.times ?? [], new Date(currentTimeMs));
 
   const updatedAtLabel = formatDateAsClockHHmm(
     dataUpdatedAt > 0 ? new Date(dataUpdatedAt) : new Date(currentTimeMs)

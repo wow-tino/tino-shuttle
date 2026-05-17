@@ -9,8 +9,15 @@ import {
 import { getSupabaseServerClient } from "#/server/supabase-server";
 import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
 
+const MAIN_CAMPUS_STOP_ID = 2;
+const MAIN_CAMPUS_FALLBACK_NAME_KO = "본캠";
+
 const ShuttleRouteRowSchema = z.object({
   id: z.number(),
+  stop_in: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
 });
 
 const ShuttleScheduleEntryRowSchema = z.object({
@@ -24,6 +31,10 @@ const ShuttleScheduleEntryRowSchema = z.object({
   service_day: z.enum(["WEEKDAY", "SATURDAY"]),
   window_end: z.string().nullable(),
   window_start: z.string().nullable(),
+});
+
+const ShuttleStopNameRowSchema = z.object({
+  name_ko: z.string(),
 });
 
 export const Route = createFileRoute("/api/shuttle/v2/times")({
@@ -45,7 +56,10 @@ export const Route = createFileRoute("/api/shuttle/v2/times")({
           const { departure, arrival, weekday } = parsedSearchParams.data;
 
           if (weekday === "SUNDAY") {
-            return withSuccessResponse([]);
+            return withSuccessResponse({
+              viaStopNameKo: null,
+              times: [],
+            });
           }
 
           const isWeekday = weekday === "WEEKDAY";
@@ -63,7 +77,26 @@ export const Route = createFileRoute("/api/shuttle/v2/times")({
           }
           const routeRows = z.array(ShuttleRouteRowSchema).parse(routeData);
           if (routeRows.length === 0) {
-            return withSuccessResponse([]);
+            return withSuccessResponse({
+              viaStopNameKo: null,
+              times: [],
+            });
+          }
+
+          let viaStopNameKo: string | null = null;
+
+          if (routeRows[0].stop_in) {
+            const { data: viaStopData, error: viaStopError } = await supabase
+              .from("shuttle_v2_stop")
+              .select("name_ko")
+              .eq("id", MAIN_CAMPUS_STOP_ID)
+              .maybeSingle();
+
+            if (!viaStopError && viaStopData !== null) {
+              viaStopNameKo = ShuttleStopNameRowSchema.parse(viaStopData).name_ko;
+            } else {
+              viaStopNameKo = MAIN_CAMPUS_FALLBACK_NAME_KO;
+            }
           }
 
           const { data: timeData, error: timeError } = await supabase
@@ -76,29 +109,36 @@ export const Route = createFileRoute("/api/shuttle/v2/times")({
           }
           const timeRows = z.array(ShuttleScheduleEntryRowSchema).parse(timeData);
           if (timeRows.length === 0) {
-            return withSuccessResponse([]);
+            return withSuccessResponse({
+              viaStopNameKo,
+              times: [],
+            });
           }
 
           const response = GetShuttleTimesResponseSchema.parse(
-            [...timeRows]
-              .sort((leftTime, rightTime) => {
-                const leftSortTime = leftTime.depart_time ?? leftTime.window_start ?? "99:99:99";
-                const rightSortTime = rightTime.depart_time ?? rightTime.window_start ?? "99:99:99";
+            {
+              viaStopNameKo,
+              times: [...timeRows]
+                .sort((leftTime, rightTime) => {
+                  const leftSortTime = leftTime.depart_time ?? leftTime.window_start ?? "99:99:99";
+                  const rightSortTime =
+                    rightTime.depart_time ?? rightTime.window_start ?? "99:99:99";
 
-                return leftSortTime.localeCompare(rightSortTime);
-              })
-              .map((time) => ({
-                departTime: time.depart_time,
-                id: time.id,
-                isFirstDeparture: time.is_first_departure,
-                isLastDeparture: time.is_last_departure,
-                kind: time.kind,
-                message: time.message,
-                routeId: time.route_id,
-                serviceDay: time.service_day,
-                windowEnd: time.window_end,
-                windowStart: time.window_start,
-              }))
+                  return leftSortTime.localeCompare(rightSortTime);
+                })
+                .map((time) => ({
+                  departTime: time.depart_time,
+                  id: time.id,
+                  isFirstDeparture: time.is_first_departure,
+                  isLastDeparture: time.is_last_departure,
+                  kind: time.kind,
+                  message: time.message,
+                  routeId: time.route_id,
+                  serviceDay: time.service_day,
+                  windowEnd: time.window_end,
+                  windowStart: time.window_start,
+                })),
+            }
           );
 
           return withSuccessResponse(response);
