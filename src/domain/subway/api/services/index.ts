@@ -2,6 +2,7 @@ import type {
   GetSubwayArrivalResponse,
   GetSubwayHomePreviewResponse,
 } from "#/domain/subway/api/models";
+import type { ApiResponseWithBody } from "#/shared/api";
 import { api } from "#/shared/api";
 import { apiV2 } from "#/shared/api/instance";
 
@@ -12,7 +13,9 @@ export const getSubwayHomePreview = async (stationName: string) => {
 };
 
 export const getSubwayArrival = async (stationName: string) => {
-  return apiV2<GetSubwayArrivalResponse>(`subway/arrival`, {
-    searchParams: { stationName },
-  }).json();
+  return apiV2
+    .get<ApiResponseWithBody<GetSubwayArrivalResponse>>(`subway/arrival`, {
+      searchParams: { stationName },
+    })
+    .json();
 };
