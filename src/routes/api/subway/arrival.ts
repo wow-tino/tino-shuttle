@@ -20,8 +20,6 @@ const SQUARE_BRACKET_PATTERN = /\[([^\]]*)\]/g;
 const NTH_PREV_STATION_HEAD_PATTERN = /^(\d+)번째\s*전역/;
 
 const DEFAULT_LIMIT_PER_DIRECTION = 3;
-const MAX_LIMIT_PER_DIRECTION = 40;
-const MIN_LIMIT_PER_DIRECTION = 1;
 
 const subwayApiKey = process.env.SUBWAY_API_KEY ?? "";
 
@@ -37,17 +35,6 @@ function normalizePreviewArrivalMessage(rawMessage: string): string {
 function buildSeoulRealtimeStationArrivalUrl(input: { apiKey: string; stationName: string }) {
   const encodedStationName = encodeURIComponent(input.stationName);
   return `http://swopenapi.seoul.go.kr/api/subway/${input.apiKey}/json/realtimeStationArrival/${SEOUL_REALTIME_ARRIVAL_START_INDEX}/${SEOUL_REALTIME_ARRIVAL_END_INDEX}/${encodedStationName}`;
-}
-
-function parseLimitPerDirection(raw: string | null): number {
-  if (raw === null || raw.trim().length === 0) {
-    return DEFAULT_LIMIT_PER_DIRECTION;
-  }
-  const parsed: number = Number.parseInt(raw, 10);
-  if (Number.isNaN(parsed)) {
-    return DEFAULT_LIMIT_PER_DIRECTION;
-  }
-  return Math.min(MAX_LIMIT_PER_DIRECTION, Math.max(MIN_LIMIT_PER_DIRECTION, parsed));
 }
 
 function isUphillDirection(updnLine: string): boolean {
@@ -82,17 +69,17 @@ function mapRealtimeItemToTrainRow(train: RealtimeArrivalItem): GetSubwayArrival
 }
 
 /** 서울 API가 주는 순서를 유지하며 상행·내선 / 하행·외선으로 각각 최대 `limitPerDirection`개만 수집합니다. */
-function buildUphillDownwardArrays(input: {
-  arrivals: RealtimeArrivalItem[];
-  limitPerDirection: number;
-}) {
+function buildUphillDownwardArrays(input: { arrivals: RealtimeArrivalItem[] }) {
   const uphill: GetSubwayArrivalTrainRow[] = [];
   const downward: GetSubwayArrivalTrainRow[] = [];
 
   for (const train of input.arrivals) {
-    if (isUphillDirection(train.updnLine) && uphill.length < input.limitPerDirection) {
+    if (isUphillDirection(train.updnLine) && uphill.length < DEFAULT_LIMIT_PER_DIRECTION) {
       uphill.push(mapRealtimeItemToTrainRow(train));
-    } else if (isDownwardDirection(train.updnLine) && downward.length < input.limitPerDirection) {
+    } else if (
+      isDownwardDirection(train.updnLine) &&
+      downward.length < DEFAULT_LIMIT_PER_DIRECTION
+    ) {
       downward.push(mapRealtimeItemToTrainRow(train));
     }
   }
@@ -112,10 +99,7 @@ export const Route = createFileRoute("/api/subway/arrival")({
             return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
           }
 
-          const limitRaw = requestUrl.searchParams.get("limitPerDirection");
-          const limitPerDirection = parseLimitPerDirection(limitRaw);
-
-          const cacheKey = `subway:arrival:v3:${station}:limit:${String(limitPerDirection)}`;
+          const cacheKey = `subway:arrival:v3:${station}`;
           const cached = subwayArrivalCache.get<GetSubwayArrivalResponse>(cacheKey);
           if (cached) {
             return withSuccessResponse(cached);
@@ -150,10 +134,7 @@ export const Route = createFileRoute("/api/subway/arrival")({
             btrainSttus: arrival.btrainSttus ?? "",
           }));
 
-          const { uphill, downward } = buildUphillDownwardArrays({
-            arrivals,
-            limitPerDirection,
-          });
+          const { uphill, downward } = buildUphillDownwardArrays({ arrivals });
 
           const payload: GetSubwayArrivalResponse = {
             station,
