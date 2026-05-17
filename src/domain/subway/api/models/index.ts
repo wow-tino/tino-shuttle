@@ -64,3 +64,15 @@ export const GetSubwayHomePreviewResponseSchema = z.object({
 });
 
 export type GetSubwayHomePreviewResponse = z.infer<typeof GetSubwayHomePreviewResponseSchema>;
+
+export interface GetSubwayArrivalTrainRow {
+  toward: string;
+  location: string;
+  subwwayType: string;
+}
+
+export interface GetSubwayArrivalResponse {
+  station: string;
+  uphill: GetSubwayArrivalTrainRow[];
+  downward: GetSubwayArrivalTrainRow[];
+}
