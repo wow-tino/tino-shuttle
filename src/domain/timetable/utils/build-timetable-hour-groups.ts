@@ -17,6 +17,7 @@ export interface TimetableHourGroup {
   hourLabel: string;
   status: TimetableMinuteStatus;
   minutes: TimetableMinuteItem[];
+  sortAt: Date;
 }
 
 export interface TimetableNotice {
@@ -24,7 +25,22 @@ export interface TimetableNotice {
   label: string;
   message: string;
   status: TimetableMinuteStatus;
+  sortAt: Date;
 }
+
+export type TimetableTimelineItem =
+  | {
+      id: string;
+      kind: "hour-group";
+      sortAt: Date;
+      group: TimetableHourGroup;
+    }
+  | {
+      id: string;
+      kind: "notice";
+      sortAt: Date;
+      notice: TimetableNotice;
+    };
 
 interface FixedDepartureEntry {
   id: number;
@@ -106,6 +122,26 @@ function getTimetableNoticeStatus(
   return "future";
 }
 
+function getTimetableNoticeSortAt(
+  dayStart: Date,
+  windowStart: string | null,
+  windowEnd: string | null
+): Date {
+  const windowStartAt = parsePgTimeOnLocalDay(dayStart, windowStart);
+
+  if (windowStartAt !== null) {
+    return windowStartAt;
+  }
+
+  const windowEndAt = parsePgTimeOnLocalDay(dayStart, windowEnd);
+
+  if (windowEndAt !== null) {
+    return windowEndAt;
+  }
+
+  return new Date(dayStart.getTime() + 24 * 60 * 60 * 1_000);
+}
+
 export function buildTimetableHourGroups(
   shuttleTimes: GetShuttleTimeProps[],
   referenceNow: Date
@@ -140,6 +176,7 @@ export function buildTimetableHourGroups(
           shuttleTime.windowEnd,
           referenceNow
         ),
+        sortAt: getTimetableNoticeSortAt(dayStart, shuttleTime.windowStart, shuttleTime.windowEnd),
       });
     }
   });
@@ -182,12 +219,41 @@ export function buildTimetableHourGroups(
         hourLabel: `${formatTwoDigitNumber(hour)}시`,
         status: getTimetableHourStatus(minutes),
         minutes,
+        sortAt: departures[0].departureAt,
       };
     }
   );
 
+  const timelineItems: TimetableTimelineItem[] = [
+    ...hourGroups.map((group) => ({
+      id: `hour-${group.hour}`,
+      kind: "hour-group" as const,
+      sortAt: group.sortAt,
+      group,
+    })),
+    ...notices.map((notice) => ({
+      id: `notice-${notice.id}`,
+      kind: "notice" as const,
+      sortAt: notice.sortAt,
+      notice,
+    })),
+  ].sort((leftItem, rightItem) => {
+    const sortResult = leftItem.sortAt.getTime() - rightItem.sortAt.getTime();
+
+    if (sortResult !== 0) {
+      return sortResult;
+    }
+
+    if (leftItem.kind === rightItem.kind) {
+      return 0;
+    }
+
+    return leftItem.kind === "notice" ? -1 : 1;
+  });
+
   return {
     hourGroups,
     notices,
+    timelineItems,
   };
 }

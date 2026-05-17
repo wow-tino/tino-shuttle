@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 
 import { TimetableHourRow } from "./timetable-hour-row";
+import { TimetableNoticeRow } from "./timetable-notice-row";
 
 import type { GetShuttleTimeProps } from "#/domain/shuttle/api/models";
-import type { TimetableNotice } from "#/domain/timetable/utils/build-timetable-hour-groups";
 import { buildTimetableHourGroups } from "#/domain/timetable/utils/build-timetable-hour-groups";
 import { Txt } from "#/shared/components/txt";
 import type { ShuttleServiceDay } from "#/shared/types/shuttle";
-import { cn } from "#/shared/utils";
 
 const TIMETABLE_CLOCK_SYNC_MS = 30_000;
 
@@ -16,26 +15,6 @@ interface TimetableBoardProps {
   weekday: ShuttleServiceDay;
   isLoading: boolean;
   isError: boolean;
-}
-
-function getNoticeContainerClassName(status: TimetableNotice["status"]) {
-  if (status === "current") {
-    return "border border-tu-blue/20 bg-background-selected";
-  }
-
-  if (status === "past") {
-    return "bg-background opacity-70";
-  }
-
-  return "bg-background";
-}
-
-function getNoticeLabelClassName(status: TimetableNotice["status"]) {
-  if (status === "current") {
-    return "text-tu-blue";
-  }
-
-  return "text-dark-gray";
 }
 
 export function TimetableBoard({ shuttleTimes, weekday, isLoading, isError }: TimetableBoardProps) {
@@ -107,7 +86,7 @@ export function TimetableBoard({ shuttleTimes, weekday, isLoading, isError }: Ti
     );
   }
 
-  if (timetableViewModel.hourGroups.length === 0 && timetableViewModel.notices.length === 0) {
+  if (timetableViewModel.timelineItems.length === 0) {
     return (
       <section className="content-border mx-5 bg-white px-4 py-8 text-center">
         <Txt typography="body-bold">선택한 노선의 시간표가 없어요.</Txt>
@@ -117,34 +96,25 @@ export function TimetableBoard({ shuttleTimes, weekday, isLoading, isError }: Ti
 
   return (
     <section className="content-border mx-5 bg-white px-4 py-6" aria-label="셔틀 전체 시간표">
-      {timetableViewModel.hourGroups.length > 0 ? (
-        <ol>
-          {timetableViewModel.hourGroups.map((group, index) => (
+      <ol>
+        {timetableViewModel.timelineItems.map((item, index) =>
+          item.kind === "hour-group" ? (
             <TimetableHourRow
-              key={group.hour}
-              group={group}
+              key={item.id}
+              group={item.group}
               isFirst={index === 0}
-              isLast={index === timetableViewModel.hourGroups.length - 1}
+              isLast={index === timetableViewModel.timelineItems.length - 1}
             />
-          ))}
-        </ol>
-      ) : null}
-
-      {timetableViewModel.notices.length > 0 ? (
-        <div className="border-gray mt-2 space-y-2 border-t pt-4">
-          {timetableViewModel.notices.map((notice) => (
-            <div
-              key={notice.id}
-              className={cn("rounded-lg px-3 py-2", getNoticeContainerClassName(notice.status))}
-            >
-              <p className={cn("text-sm font-semibold", getNoticeLabelClassName(notice.status))}>
-                {notice.label}
-              </p>
-              <p className="text-xs text-gray-500">{notice.message}</p>
-            </div>
-          ))}
-        </div>
-      ) : null}
+          ) : (
+            <TimetableNoticeRow
+              key={item.id}
+              notice={item.notice}
+              isFirst={index === 0}
+              isLast={index === timetableViewModel.timelineItems.length - 1}
+            />
+          )
+        )}
+      </ol>
     </section>
   );
 }
