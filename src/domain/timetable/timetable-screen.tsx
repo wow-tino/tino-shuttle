@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { useSuspenseQueries } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { ClientOnly } from "@tanstack/react-router";
 
-import type { ShuttleTimetableRuleDto } from "#/domain/shuttle/api/models";
+import { TimetableBoard } from "./components/timetable-board";
+import { DEFAULT_SHUTTLE_STOP_SELECTION } from "../shuttle/constants/default-stop-selection";
+
+import swapIcon from "/icons/swap.svg";
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
-import { useSelectedShuttlePatternStore } from "#/domain/shuttle/hooks/use-selected-shuttle-pattern-store";
-import { computeNextShuttleDepartureAt } from "#/domain/shuttle/utils/next-bus";
-import { Label } from "#/shared/components/label";
+import { Button } from "#/shared/components/button";
 import {
   Select,
   SelectContent,
@@ -14,176 +16,140 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/shared/components/select";
-import { formatHm, ms, resolveSelectedPattern, startOfLocalDay } from "#/shared/utils";
+import { Txt } from "#/shared/components/txt";
+import type { ShuttleServiceDay } from "#/shared/types/shuttle";
 
-const THIRTY_MINUTES_MS = ms.minutes(30);
-const TICK_MS = ms.seconds(10);
-
-function buildTodayDepartures(input: {
-  readonly patternId: number;
-  readonly now: Date;
-  readonly rules: ShuttleTimetableRuleDto[];
-}) {
-  const { patternId, now, rules } = input;
-  const todayStart = startOfLocalDay(now);
-  const tomorrowStart = new Date(todayStart.getTime() + 24 * 60 * 60 * 1_000);
-
-  const departures = [];
-  let cursor = new Date(todayStart.getTime());
-
-  for (let i = 0; i < 512; i += 1) {
-    const next = computeNextShuttleDepartureAt(patternId, cursor, rules);
-    if (!next) {
-      break;
-    }
-    if (next.getTime() >= tomorrowStart.getTime()) {
-      break;
-    }
-    departures.push(next);
-    cursor = new Date(next.getTime() + 1_000);
-  }
-
-  return departures;
+interface TimetableScreenProps {
+  weekday: ShuttleServiceDay;
 }
 
-function getFirstUpcomingDepartureIndex(departures: readonly Date[], nowTs: number): number {
-  if (departures.length === 0) {
-    return -1;
-  }
-  const firstDepartureAtMs: number = departures[0].getTime();
-  if (nowTs < firstDepartureAtMs - THIRTY_MINUTES_MS) {
-    return -1;
-  }
-  return departures.findIndex((d: Date) => d.getTime() >= nowTs);
-}
+export function TimetableScreen({ weekday }: TimetableScreenProps) {
+  const [selectedStopId, setSelectedStopId] = useState(DEFAULT_SHUTTLE_STOP_SELECTION);
 
-export function TimetableScreen() {
-  const [nowTs, setNowTs] = useState(() => Date.now());
+  const { data: shuttleStops } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
+  const {
+    data: shuttleTimes,
+    isFetching: isFetchingShuttleTimes,
+    isError: isShuttleTimesError,
+  } = useQuery(
+    SHUTTLE_QUERIES.GetShuttleTimes({
+      departure: selectedStopId.departure,
+      arrival: selectedStopId.arrival,
+      weekday,
+    })
+  );
 
-  const { selectedPatternCode, setSelectedPatternCode } = useSelectedShuttlePatternStore();
-
-  const [patternsQuery, rulesQuery] = useSuspenseQueries({
-    queries: [SHUTTLE_QUERIES.GetShuttlePatterns(), SHUTTLE_QUERIES.GetShuttleTimetableRules()],
-  });
-
-  const patterns = patternsQuery.data.patterns;
-  const rules = rulesQuery.data.rules;
-
-  const selectedPattern =
-    patterns.length > 0 ? resolveSelectedPattern(patterns, selectedPatternCode) : null;
-  const now = new Date(nowTs);
-
-  const departures: Date[] =
-    patterns.length === 0 || !selectedPattern
-      ? []
-      : buildTodayDepartures({
-          patternId: selectedPattern.id,
-          now,
-          rules,
-        });
-
-  const firstUpcomingDepartureIndex = getFirstUpcomingDepartureIndex(departures, nowTs);
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setNowTs(Date.now());
-    }, TICK_MS);
-    return () => {
-      window.clearInterval(intervalId);
+  const onSelectDeparture = (id: string) => {
+    const nextStopSelection = {
+      departure: id,
+      arrival: selectedStopId.arrival,
     };
-  }, []);
+    setSelectedStopId(nextStopSelection);
+  };
+  const onSelectArrival = (id: string) => {
+    const nextStopSelection = {
+      departure: selectedStopId.departure,
+      arrival: id,
+    };
+    setSelectedStopId(nextStopSelection);
+  };
+
+  const onSwapStopSelection = () => {
+    const nextStopSelection = {
+      departure: selectedStopId.arrival,
+      arrival: selectedStopId.departure,
+    };
+    setSelectedStopId(nextStopSelection);
+  };
 
   return (
-    <main className="flex flex-col gap-6 p-6">
-      <div className="space-y-2">
-        <h1 className="text-foreground text-xl font-semibold tracking-tight">셔틀</h1>
-        <p className="text-muted-foreground text-sm">
-          {patterns.length === 0
-            ? "등록된 노선이 없습니다."
-            : "선택한 노선의 오늘 전체 출발 시각을 보여줍니다."}
-        </p>
-      </div>
-
-      {patterns.length === 0 || !selectedPattern ? (
-        <p className="text-muted-foreground text-sm" role="status">
-          등록된 노선이 없습니다.
-        </p>
-      ) : (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="shuttle-timetable-pattern-select">노선</Label>
-            <Select value={selectedPattern.code} onValueChange={setSelectedPatternCode}>
-              <SelectTrigger
-                id="shuttle-timetable-pattern-select"
-                className="w-full min-w-0"
-                aria-label="셔틀 시간표 노선 선택"
-              >
-                <SelectValue placeholder="노선을 선택하세요">{selectedPattern.nameKo}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {patterns.map((p) => (
-                  <SelectItem key={p.code} value={p.code}>
-                    {p.nameKo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {departures.length === 0 && (
-            <p
-              className="text-muted-foreground text-sm"
-              role="status"
-              aria-label="오늘 시간표 없음"
-            >
-              오늘은 표시할 출발 시각이 없습니다.
-            </p>
-          )}
-
-          {departures.length > 0 && (
-            <section aria-label="오늘 전체 시간표" className="space-y-3">
-              <h2 className="text-foreground text-sm font-medium">{selectedPattern.nameKo}</h2>
+    <main className="flex flex-col py-8">
+      <section className="space-y-[25px] px-7">
+        <div className="space-y-2">
+          <Txt typography="h1-title">셔틀 시간표</Txt>
+          <Txt typography="p">노선을 선택하고 전체 셔틀 시간표를 확인하세요.</Txt>
+        </div>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5">
+          <div className="col-start-1 row-span-2 row-start-1 grid min-h-0 min-w-0 grid-rows-subgrid">
+            <div className="relative row-start-1 flex items-center justify-center">
               <div
-                className="divide-border bg-card rounded-lg border p-3"
-                role="grid"
-                aria-label="오늘 출발 시각 그리드"
-              >
-                <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                  {departures.map((departureAt: Date, index: number) => {
-                    const isNext =
-                      firstUpcomingDepartureIndex !== -1 && index === firstUpcomingDepartureIndex;
-                    return (
-                      <div
-                        key={departureAt.toISOString()}
-                        role="gridcell"
-                        aria-label={
-                          isNext ? `다음 출발 ${formatHm(departureAt)}` : formatHm(departureAt)
-                        }
-                        className={[
-                          "relative flex items-center justify-center rounded-md border px-2 py-3 text-sm font-semibold tabular-nums",
-                          isNext
-                            ? "border-primary/50 bg-primary/5 text-foreground ring-primary/40 ring-2"
-                            : "border-border bg-background text-foreground",
-                        ].join(" ")}
-                      >
-                        {formatHm(departureAt)}
-                        {isNext ? (
-                          <span
-                            className="bg-primary text-primary-foreground absolute -top-2 left-1/2 -translate-x-1/2 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                            aria-label="다음 출발"
-                          >
-                            다음
-                          </span>
-                        ) : null}
-                      </div>
-                    );
-                  })}
+                aria-hidden
+                className="absolute top-1/2 -bottom-1.5 left-1/2 w-0.5 -translate-x-1/2 bg-[#d0d0d0]"
+              />
+              <div className="relative z-10 flex size-3.5 items-center justify-center rounded-full bg-[#2959A34D]">
+                <div className="bg-tu-blue flex size-2.5 items-center justify-center rounded-full">
+                  <div className="size-1 rounded-full bg-white" />
                 </div>
               </div>
-            </section>
-          )}
-        </>
-      )}
+            </div>
+            <div className="relative row-start-2 flex items-center justify-center">
+              <div
+                aria-hidden
+                className="absolute -top-1.5 bottom-1/2 left-1/2 w-0.5 -translate-x-1/2 bg-[#d0d0d0]"
+              />
+              <div className="relative z-10 flex size-3.5 items-center justify-center rounded-full bg-[#4EB1CA4D]">
+                <div className="bg-tu-mint flex size-2.5 items-center justify-center rounded-full">
+                  <div className="size-1 rounded-full bg-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-start-2 row-start-1 min-w-0">
+            <ClientOnly
+              fallback={<div className="h-9 w-full animate-pulse rounded-lg bg-gray-200" />}
+            >
+              <Select value={selectedStopId.departure} onValueChange={onSelectDeparture}>
+                <SelectTrigger className="w-full" disabled={weekday === "SUNDAY"}>
+                  <SelectValue placeholder="노선을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {shuttleStops.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()} textValue={p.nameKo}>
+                      {p.nameKo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </ClientOnly>
+          </div>
+          <div className="row-span-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="출발지와 도착지 바꾸기"
+              disabled={weekday === "SUNDAY"}
+              onClick={onSwapStopSelection}
+            >
+              <img src={swapIcon} alt="출/도착 교체 아이콘" />
+            </Button>
+          </div>
+          <div className="col-start-2 row-start-2 min-w-0">
+            <ClientOnly
+              fallback={<div className="h-9 w-full animate-pulse rounded-lg bg-gray-200" />}
+            >
+              <Select value={selectedStopId.arrival} onValueChange={onSelectArrival}>
+                <SelectTrigger className="w-full" disabled={weekday === "SUNDAY"}>
+                  <SelectValue placeholder="노선을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {shuttleStops.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()} textValue={p.nameKo}>
+                      {p.nameKo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </ClientOnly>
+          </div>
+        </div>
+      </section>
+      <div className="bg-light-gray mt-6 mb-5 h-px" />
+      <TimetableBoard
+        shuttleTimes={shuttleTimes}
+        weekday={weekday}
+        isLoading={isFetchingShuttleTimes && shuttleTimes === undefined}
+        isError={isShuttleTimesError}
+      />
     </main>
   );
 }
