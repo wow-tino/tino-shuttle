@@ -35,7 +35,7 @@ export function TimetableBoard({ shuttleTimes, weekday, isLoading, isError }: Ti
   if (weekday === "SUNDAY") {
     return (
       <section className="content-border mx-5 bg-white px-4 py-8 text-center">
-        <Txt typography="body-bold">일요일에는 셔틀이 운행되지 않아요.</Txt>
+        <Txt typography="body-bold">일요일은 셔틀이 없어요</Txt>
       </section>
     );
   }
@@ -81,7 +81,7 @@ export function TimetableBoard({ shuttleTimes, weekday, isLoading, isError }: Ti
   if (isError) {
     return (
       <section className="content-border mx-5 bg-white px-4 py-8 text-center">
-        <Txt typography="body-bold">셔틀 시간표를 불러오지 못했어요.</Txt>
+        <Txt typography="body-bold">셔틀 시간표를 불러오지 못했어요</Txt>
       </section>
     );
   }
@@ -89,7 +89,7 @@ export function TimetableBoard({ shuttleTimes, weekday, isLoading, isError }: Ti
   if (timetableViewModel.timelineItems.length === 0) {
     return (
       <section className="content-border mx-5 bg-white px-4 py-8 text-center">
-        <Txt typography="body-bold">선택한 노선의 시간표가 없어요.</Txt>
+        <Txt typography="body-bold">선택한 노선의 시간표가 없어요</Txt>
       </section>
     );
   }

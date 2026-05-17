@@ -25,13 +25,6 @@ interface ShuttleInfoProps {
   weekday: ShuttleServiceDay;
 }
 
-interface ShuttleInfoDisplay {
-  primaryLabel: string;
-  primarySuffix: string | null;
-  secondaryLabel: string;
-  secondaryValue: string | null;
-}
-
 function getWindowPrimaryLabel(kind: GetShuttleTimeProps["kind"]): string {
   if (kind === "ADHOC_WINDOW") {
     return "수시운행";
@@ -110,10 +103,22 @@ function getFollowingRideTimeLabel(following: UpcomingShuttleScheduleEntry | nul
   return getScheduleEntryRideTimeLabel(following);
 }
 
-function getShuttleInfoDisplay(
-  times: GetShuttleTimeProps[],
-  referenceNow: Date
-): ShuttleInfoDisplay {
+interface GetShuttleInfoDisplayProps {
+  times: GetShuttleTimeProps[];
+  referenceNow: Date;
+  weekday: ShuttleServiceDay;
+}
+
+function getShuttleInfoDisplay({ times, referenceNow, weekday }: GetShuttleInfoDisplayProps) {
+  if (weekday === "SUNDAY") {
+    return {
+      primaryLabel: "일요일은 셔틀이 없어요",
+      primarySuffix: null,
+      secondaryLabel: "다음 셔틀",
+      secondaryValue: null,
+    };
+  }
+
   const scheduleEntry = getShuttleScheduleEntryPreview(times, referenceNow);
   const activeWindow = getActiveShuttleWindowPreview(times, referenceNow);
   if (activeWindow.kind === "active") {
@@ -194,7 +199,11 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
     isFetching,
   } = useQuery(SHUTTLE_QUERIES.GetShuttleTimes({ departure, arrival, weekday }));
 
-  const shuttleInfoDisplay = getShuttleInfoDisplay(times?.times ?? [], new Date(currentTimeMs));
+  const shuttleInfoDisplay = getShuttleInfoDisplay({
+    times: times?.times ?? [],
+    referenceNow: new Date(currentTimeMs),
+    weekday,
+  });
 
   const updatedAtLabel = formatDateAsClockHHmm(
     dataUpdatedAt > 0 ? new Date(dataUpdatedAt) : new Date(currentTimeMs)
