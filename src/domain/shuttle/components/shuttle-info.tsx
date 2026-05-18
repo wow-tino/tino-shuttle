@@ -265,7 +265,7 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
           </div>
           <Link
             to="/shuttle"
-            className="border-tu-blue text-tu-blue text-xxs rounded-full border bg-white px-3 py-1.5 font-medium"
+            className="border-tu-blue text-tu-blue text-xxs rounded-full border bg-white px-3 py-1.5 leading-none font-medium"
             aria-label="셔틀 시간표 보기"
           >
             셔틀 시간표
