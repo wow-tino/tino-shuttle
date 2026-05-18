@@ -1,9 +1,9 @@
-name: Deploy Web
+name: Deploy Preview
 
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   deploy:
@@ -11,7 +11,7 @@ jobs:
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PREVIEW_PROJECT_ID }}
 
     steps:
       - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
             --scope "$VERCEL_ORG_ID" \
             --project "$VERCEL_PROJECT_ID"
 
-      - name: Deploy to Production
+      - name: Deploy to Preview
         run: |
           npx vercel --prod --yes \
             --token "$VERCEL_TOKEN" \
