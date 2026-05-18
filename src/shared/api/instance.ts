@@ -3,9 +3,7 @@ import ky from "ky";
 
 import { ApiResponseWithBodySchema } from "./schemas/api-response-with-body-schema";
 
-const isProduction = process.env.NODE_ENV === "production";
-
-const baseUrl = isProduction ? "https://tino-shuttle.kro.kr" : "http://localhost:3000";
+const baseUrl = process.env.VITE_BASE_URL ?? "http://localhost:3000";
 
 const client = ky.create({
   prefixUrl: `${baseUrl}/api`,
