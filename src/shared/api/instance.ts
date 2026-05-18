@@ -3,7 +3,7 @@ import ky from "ky";
 
 import { ApiResponseWithBodySchema } from "./schemas/api-response-with-body-schema";
 
-const baseUrl = process.env.VITE_BASE_URL ?? "http://localhost:3000";
+const baseUrl = import.meta.env.VITE_BASE_URL ?? "http://localhost:3000";
 
 const client = ky.create({
   prefixUrl: `${baseUrl}/api`,
