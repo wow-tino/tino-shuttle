@@ -12,7 +12,8 @@
     "check": "prettier --write . && eslint --fix",
     "lint": "eslint --fix \"**/*.{ts,tsx,md}\"",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
