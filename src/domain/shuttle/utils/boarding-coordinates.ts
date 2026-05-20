@@ -18,12 +18,8 @@ export function resolveBoardingCoordinates(
   eveningStartHourLocal: number
 ): ResolvedBoardingCoordinates {
   const hourLocal = reference.getHours();
-  const {
-    boardingLatitude,
-    boardingLongitude,
-    boardingEveningLatitude,
-    boardingEveningLongitude,
-  } = pattern;
+  const { boardingLatitude, boardingLongitude, boardingEveningLatitude, boardingEveningLongitude } =
+    pattern;
 
   if (
     hourLocal >= eveningStartHourLocal &&
