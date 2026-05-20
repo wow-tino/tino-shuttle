@@ -8,11 +8,8 @@ import type {
   RealtimeArrivalItem,
 } from "#/domain/subway/api/models";
 import { SeoulRealtimeStationArrivalApiResponseSchema } from "#/domain/subway/api/models";
-import { TtlMemoryCache } from "#/server/ttl-memory-cache";
 import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
 import { ms } from "#/shared/utils";
-
-const subwayRealtimeCache = new TtlMemoryCache(15_000);
 
 const SEOUL_REALTIME_ARRIVAL_START_INDEX = 1;
 const SEOUL_REALTIME_ARRIVAL_END_INDEX = 40;
@@ -99,12 +96,6 @@ export const Route = createFileRoute("/api/subway/realtime")({
             return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
           }
 
-          const cacheKey = `subway:realtime:v1:${station}`;
-          const cached = subwayRealtimeCache.get<GetSubwayRealtimeResponse>(cacheKey);
-          if (cached) {
-            return withSuccessResponse(cached);
-          }
-
           const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
             apiKey: subwayApiKey,
             stationName: station,
@@ -142,7 +133,6 @@ export const Route = createFileRoute("/api/subway/realtime")({
             downward,
           };
 
-          subwayRealtimeCache.set(cacheKey, payload);
           return withSuccessResponse(payload);
         } catch (error: unknown) {
           return withErrorResponseFromUnknown(error);

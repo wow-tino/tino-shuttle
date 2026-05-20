@@ -2,13 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import ky from "ky";
 
-import type { GetSubwayHomePreviewResponse, RealtimeArrivalItem } from "#/domain/subway/api/models";
+import type { RealtimeArrivalItem } from "#/domain/subway/api/models";
 import { SeoulRealtimeStationArrivalApiResponseSchema } from "#/domain/subway/api/models";
-import { TtlMemoryCache } from "#/server/ttl-memory-cache";
 import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
 import { ms } from "#/shared/utils";
-
-const subwayArrivalCache = new TtlMemoryCache(15_000);
 
 const SHUTTLE_HOME_SUBWAY_LINE_PREVIEW_CONFIGS = [
   {
@@ -159,12 +156,6 @@ export const Route = createFileRoute("/api/subway/preview")({
             return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
           }
 
-          const cacheKey = `subway:arrival:preview:${stationName}:v3`;
-          const cached = subwayArrivalCache.get<GetSubwayHomePreviewResponse>(cacheKey);
-          if (cached) {
-            return withSuccessResponse(cached);
-          }
-
           const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
             apiKey: subwayApiKey,
             stationName,
@@ -195,7 +186,6 @@ export const Route = createFileRoute("/api/subway/preview")({
           }));
           const lines = buildSubwayHomePreviewLines(arrivals);
           const payload = { stationName, arrivals, lines };
-          subwayArrivalCache.set(cacheKey, payload);
           return withSuccessResponse(payload);
         } catch (error: unknown) {
           return withErrorResponseFromUnknown(error);

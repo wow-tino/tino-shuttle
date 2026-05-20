@@ -5,15 +5,11 @@ import ky from "ky";
 import type {
   DataGoKrTrainScheduleApiResponse,
   DataGoKrTrainScheduleItem,
-  GetSubwayTimetableResponse,
   GetSubwayTimetableTrainRow,
 } from "#/domain/subway/api/models";
 import { DataGoKrTrainScheduleApiResponseSchema } from "#/domain/subway/api/models";
-import { TtlMemoryCache } from "#/server/ttl-memory-cache";
 import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
 import { ms } from "#/shared/utils";
-
-const subwayTimetableCache = new TtlMemoryCache(ms.minutes(1));
 
 const SUBWAY_TIMETABLE_URL = "http://apis.data.go.kr/B553766/schedule/getTrainSch";
 const DEFAULT_LIMIT_PER_DIRECTION = 3;
@@ -319,12 +315,6 @@ export const Route = createFileRoute("/api/subway/timetable")({
           const now = new Date();
           const weekdayName = resolveWeekdayName(now);
           const searchDateTime = formatLocalDateTime(now);
-          const cacheMinute = searchDateTime.slice(0, 16);
-          const cacheKey = `subway:timetable:v2:${JEONGWANG_STATION_NAME}:${lineName}:${weekdayName}:${cacheMinute}`;
-          const cached = subwayTimetableCache.get<GetSubwayTimetableResponse>(cacheKey);
-          if (cached) {
-            return withSuccessResponse(cached);
-          }
 
           const directionGroups = resolveDirectionGroups(lineName);
           const [uphillTrainSchedules, downwardTrainSchedules] = await Promise.all([
@@ -343,13 +333,12 @@ export const Route = createFileRoute("/api/subway/timetable")({
               searchDateTime,
             }),
           ]);
-          const payload: GetSubwayTimetableResponse = {
+          const payload = {
             station: JEONGWANG_STATION_NAME,
             uphill: buildNextTrainRows({ trainSchedules: uphillTrainSchedules, now }),
             downward: buildNextTrainRows({ trainSchedules: downwardTrainSchedules, now }),
           };
 
-          subwayTimetableCache.set(cacheKey, payload);
           return withSuccessResponse(payload);
         } catch (error: unknown) {
           return withErrorResponseFromUnknown(error);

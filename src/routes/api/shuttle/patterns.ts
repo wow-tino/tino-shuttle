@@ -2,12 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import type { GetShuttlePatternsResponse, ShuttlePatternDto } from "#/domain/shuttle/api/models";
 import { getSupabaseServerClient } from "#/server/supabase-server";
-import { TtlMemoryCache } from "#/server/ttl-memory-cache";
 import { withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
-
-const patternsCache = new TtlMemoryCache(120_000);
-
-const PATTERNS_CACHE_KEY = "shuttle:patterns:v1";
 
 function mapPatternRow(row: {
   id: number;
@@ -36,11 +31,6 @@ export const Route = createFileRoute("/api/shuttle/patterns")({
     handlers: {
       GET: async () => {
         try {
-          const cached = patternsCache.get<GetShuttlePatternsResponse>(PATTERNS_CACHE_KEY);
-          if (cached) {
-            return withSuccessResponse(cached);
-          }
-
           const supabase = getSupabaseServerClient();
           const { data, error } = await supabase
             .from("shuttle_pattern")
@@ -69,7 +59,6 @@ export const Route = createFileRoute("/api/shuttle/patterns")({
           );
 
           const payload: GetShuttlePatternsResponse = { patterns };
-          patternsCache.set(PATTERNS_CACHE_KEY, payload);
           return withSuccessResponse(payload);
         } catch (error: unknown) {
           return withErrorResponseFromUnknown(error);
