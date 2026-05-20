@@ -5,12 +5,7 @@ import type {
   ShuttleTimetableRuleDto,
 } from "#/domain/shuttle/api/models";
 import { getSupabaseServerClient } from "#/server/supabase-server";
-import { TtlMemoryCache } from "#/server/ttl-memory-cache";
 import { withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
-
-const timetableCache = new TtlMemoryCache(120_000);
-
-const TIMETABLE_CACHE_KEY = "shuttle:timetable:all:v1";
 
 function mapRuleRow(row: {
   id: number;
@@ -47,11 +42,6 @@ export const Route = createFileRoute("/api/shuttle/time-table-rules")({
     handlers: {
       GET: async () => {
         try {
-          const cached = timetableCache.get<GetShuttleTimetableRulesResponse>(TIMETABLE_CACHE_KEY);
-          if (cached) {
-            return withSuccessResponse(cached);
-          }
-
           const supabase = getSupabaseServerClient();
           const { data, error } = await supabase
             .from("shuttle_timetable_rule")
@@ -83,7 +73,6 @@ export const Route = createFileRoute("/api/shuttle/time-table-rules")({
           );
 
           const payload: GetShuttleTimetableRulesResponse = { rules };
-          timetableCache.set(TIMETABLE_CACHE_KEY, payload);
           return withSuccessResponse(payload);
         } catch (error: unknown) {
           return withErrorResponseFromUnknown(error);
