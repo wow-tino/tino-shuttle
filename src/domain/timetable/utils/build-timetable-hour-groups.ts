@@ -142,10 +142,7 @@ function getTimetableNoticeSortAt(
   return new Date(dayStart.getTime() + 24 * 60 * 60 * 1_000);
 }
 
-export function buildTimetableHourGroups(
-  shuttleTimes: GetShuttleTimeProps[],
-  referenceNow: Date
-) {
+export function buildTimetableHourGroups(shuttleTimes: GetShuttleTimeProps[], referenceNow: Date) {
   const dayStart = startOfLocalDay(referenceNow);
   const fixedDepartures: FixedDepartureEntry[] = [];
   const notices: TimetableNotice[] = [];
@@ -188,7 +185,9 @@ export function buildTimetableHourGroups(
   );
   const nextDeparture = hasActiveNotice
     ? null
-    : sortedFixedDepartures.find((departure) => departure.departureAt.getTime() >= referenceNow.getTime());
+    : sortedFixedDepartures.find(
+        (departure) => departure.departureAt.getTime() >= referenceNow.getTime()
+      );
   const hourGroupsByHour = new Map<number, FixedDepartureEntry[]>();
 
   sortedFixedDepartures.forEach((departure) => {

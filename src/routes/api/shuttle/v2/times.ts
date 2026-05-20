@@ -115,31 +115,28 @@ export const Route = createFileRoute("/api/shuttle/v2/times")({
             });
           }
 
-          const response = GetShuttleTimesResponseSchema.parse(
-            {
-              viaStopNameKo,
-              times: [...timeRows]
-                .sort((leftTime, rightTime) => {
-                  const leftSortTime = leftTime.depart_time ?? leftTime.window_start ?? "99:99:99";
-                  const rightSortTime =
-                    rightTime.depart_time ?? rightTime.window_start ?? "99:99:99";
+          const response = GetShuttleTimesResponseSchema.parse({
+            viaStopNameKo,
+            times: [...timeRows]
+              .sort((leftTime, rightTime) => {
+                const leftSortTime = leftTime.depart_time ?? leftTime.window_start ?? "99:99:99";
+                const rightSortTime = rightTime.depart_time ?? rightTime.window_start ?? "99:99:99";
 
-                  return leftSortTime.localeCompare(rightSortTime);
-                })
-                .map((time) => ({
-                  departTime: time.depart_time,
-                  id: time.id,
-                  isFirstDeparture: time.is_first_departure,
-                  isLastDeparture: time.is_last_departure,
-                  kind: time.kind,
-                  message: time.message,
-                  routeId: time.route_id,
-                  serviceDay: time.service_day,
-                  windowEnd: time.window_end,
-                  windowStart: time.window_start,
-                })),
-            }
-          );
+                return leftSortTime.localeCompare(rightSortTime);
+              })
+              .map((time) => ({
+                departTime: time.depart_time,
+                id: time.id,
+                isFirstDeparture: time.is_first_departure,
+                isLastDeparture: time.is_last_departure,
+                kind: time.kind,
+                message: time.message,
+                routeId: time.route_id,
+                serviceDay: time.service_day,
+                windowEnd: time.window_end,
+                windowStart: time.window_start,
+              })),
+          });
 
           return withSuccessResponse(response);
         } catch (error) {
