@@ -70,18 +70,18 @@ export const GetSubwayHomePreviewResponseSchema = z.object({
 
 export type GetSubwayHomePreviewResponse = z.infer<typeof GetSubwayHomePreviewResponseSchema>;
 
-export const GetSubwayArrivalTrainRowSchema = z.object({
+export const GetSubwayRealtimeTrainRowSchema = z.object({
   toward: z.string(),
   location: z.string(),
   subwwayType: z.string(),
 });
 
-export type GetSubwayArrivalTrainRow = z.infer<typeof GetSubwayArrivalTrainRowSchema>;
+export type GetSubwayRealtimeTrainRow = z.infer<typeof GetSubwayRealtimeTrainRowSchema>;
 
-export const GetSubwayArrivalResponseSchema = z.object({
+export const GetSubwayRealtimeResponseSchema = z.object({
   station: z.string(),
-  uphill: z.array(GetSubwayArrivalTrainRowSchema),
-  downward: z.array(GetSubwayArrivalTrainRowSchema),
+  uphill: z.array(GetSubwayRealtimeTrainRowSchema),
+  downward: z.array(GetSubwayRealtimeTrainRowSchema),
 });
 
 export const GetSubwayTimetableTrainRowSchema = z.object({
@@ -97,7 +97,7 @@ export const GetSubwayTimetableResponseSchema = z.object({
   downward: z.array(GetSubwayTimetableTrainRowSchema),
 });
 
-export type GetSubwayArrivalResponse = z.infer<typeof GetSubwayArrivalResponseSchema>;
+export type GetSubwayRealtimeResponse = z.infer<typeof GetSubwayRealtimeResponseSchema>;
 export type GetSubwayTimetableRequest = "4호선" | "수인분당선";
 export type GetSubwayTimetableResponse = z.infer<typeof GetSubwayTimetableResponseSchema>;
 

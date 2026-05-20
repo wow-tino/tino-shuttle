@@ -13,8 +13,8 @@ import { Route as SubwayRouteImport } from './routes/subway'
 import { Route as ShuttleRouteImport } from './routes/shuttle'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSubwayTimetableRouteImport } from './routes/api/subway/timetable'
+import { Route as ApiSubwayRealtimeRouteImport } from './routes/api/subway/realtime'
 import { Route as ApiSubwayPreviewRouteImport } from './routes/api/subway/preview'
-import { Route as ApiSubwayArrivalRouteImport } from './routes/api/subway/arrival'
 import { Route as ApiShuttleTimeTableRulesRouteImport } from './routes/api/shuttle/time-table-rules'
 import { Route as ApiShuttlePatternsRouteImport } from './routes/api/shuttle/patterns'
 import { Route as ApiShuttleV2TimesRouteImport } from './routes/api/shuttle/v2/times'
@@ -40,14 +40,14 @@ const ApiSubwayTimetableRoute = ApiSubwayTimetableRouteImport.update({
   path: '/api/subway/timetable',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSubwayRealtimeRoute = ApiSubwayRealtimeRouteImport.update({
+  id: '/api/subway/realtime',
+  path: '/api/subway/realtime',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSubwayPreviewRoute = ApiSubwayPreviewRouteImport.update({
   id: '/api/subway/preview',
   path: '/api/subway/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSubwayArrivalRoute = ApiSubwayArrivalRouteImport.update({
-  id: '/api/subway/arrival',
-  path: '/api/subway/arrival',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiShuttleTimeTableRulesRoute =
@@ -78,8 +78,8 @@ export interface FileRoutesByFullPath {
   '/subway': typeof SubwayRoute
   '/api/shuttle/patterns': typeof ApiShuttlePatternsRoute
   '/api/shuttle/time-table-rules': typeof ApiShuttleTimeTableRulesRoute
-  '/api/subway/arrival': typeof ApiSubwayArrivalRoute
   '/api/subway/preview': typeof ApiSubwayPreviewRoute
+  '/api/subway/realtime': typeof ApiSubwayRealtimeRoute
   '/api/subway/timetable': typeof ApiSubwayTimetableRoute
   '/api/shuttle/v2/stops': typeof ApiShuttleV2StopsRoute
   '/api/shuttle/v2/times': typeof ApiShuttleV2TimesRoute
@@ -90,8 +90,8 @@ export interface FileRoutesByTo {
   '/subway': typeof SubwayRoute
   '/api/shuttle/patterns': typeof ApiShuttlePatternsRoute
   '/api/shuttle/time-table-rules': typeof ApiShuttleTimeTableRulesRoute
-  '/api/subway/arrival': typeof ApiSubwayArrivalRoute
   '/api/subway/preview': typeof ApiSubwayPreviewRoute
+  '/api/subway/realtime': typeof ApiSubwayRealtimeRoute
   '/api/subway/timetable': typeof ApiSubwayTimetableRoute
   '/api/shuttle/v2/stops': typeof ApiShuttleV2StopsRoute
   '/api/shuttle/v2/times': typeof ApiShuttleV2TimesRoute
@@ -103,8 +103,8 @@ export interface FileRoutesById {
   '/subway': typeof SubwayRoute
   '/api/shuttle/patterns': typeof ApiShuttlePatternsRoute
   '/api/shuttle/time-table-rules': typeof ApiShuttleTimeTableRulesRoute
-  '/api/subway/arrival': typeof ApiSubwayArrivalRoute
   '/api/subway/preview': typeof ApiSubwayPreviewRoute
+  '/api/subway/realtime': typeof ApiSubwayRealtimeRoute
   '/api/subway/timetable': typeof ApiSubwayTimetableRoute
   '/api/shuttle/v2/stops': typeof ApiShuttleV2StopsRoute
   '/api/shuttle/v2/times': typeof ApiShuttleV2TimesRoute
@@ -117,8 +117,8 @@ export interface FileRouteTypes {
     | '/subway'
     | '/api/shuttle/patterns'
     | '/api/shuttle/time-table-rules'
-    | '/api/subway/arrival'
     | '/api/subway/preview'
+    | '/api/subway/realtime'
     | '/api/subway/timetable'
     | '/api/shuttle/v2/stops'
     | '/api/shuttle/v2/times'
@@ -129,8 +129,8 @@ export interface FileRouteTypes {
     | '/subway'
     | '/api/shuttle/patterns'
     | '/api/shuttle/time-table-rules'
-    | '/api/subway/arrival'
     | '/api/subway/preview'
+    | '/api/subway/realtime'
     | '/api/subway/timetable'
     | '/api/shuttle/v2/stops'
     | '/api/shuttle/v2/times'
@@ -141,8 +141,8 @@ export interface FileRouteTypes {
     | '/subway'
     | '/api/shuttle/patterns'
     | '/api/shuttle/time-table-rules'
-    | '/api/subway/arrival'
     | '/api/subway/preview'
+    | '/api/subway/realtime'
     | '/api/subway/timetable'
     | '/api/shuttle/v2/stops'
     | '/api/shuttle/v2/times'
@@ -154,8 +154,8 @@ export interface RootRouteChildren {
   SubwayRoute: typeof SubwayRoute
   ApiShuttlePatternsRoute: typeof ApiShuttlePatternsRoute
   ApiShuttleTimeTableRulesRoute: typeof ApiShuttleTimeTableRulesRoute
-  ApiSubwayArrivalRoute: typeof ApiSubwayArrivalRoute
   ApiSubwayPreviewRoute: typeof ApiSubwayPreviewRoute
+  ApiSubwayRealtimeRoute: typeof ApiSubwayRealtimeRoute
   ApiSubwayTimetableRoute: typeof ApiSubwayTimetableRoute
   ApiShuttleV2StopsRoute: typeof ApiShuttleV2StopsRoute
   ApiShuttleV2TimesRoute: typeof ApiShuttleV2TimesRoute
@@ -191,18 +191,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSubwayTimetableRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/subway/realtime': {
+      id: '/api/subway/realtime'
+      path: '/api/subway/realtime'
+      fullPath: '/api/subway/realtime'
+      preLoaderRoute: typeof ApiSubwayRealtimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/subway/preview': {
       id: '/api/subway/preview'
       path: '/api/subway/preview'
       fullPath: '/api/subway/preview'
       preLoaderRoute: typeof ApiSubwayPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/subway/arrival': {
-      id: '/api/subway/arrival'
-      path: '/api/subway/arrival'
-      fullPath: '/api/subway/arrival'
-      preLoaderRoute: typeof ApiSubwayArrivalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/shuttle/time-table-rules': {
@@ -242,8 +242,8 @@ const rootRouteChildren: RootRouteChildren = {
   SubwayRoute: SubwayRoute,
   ApiShuttlePatternsRoute: ApiShuttlePatternsRoute,
   ApiShuttleTimeTableRulesRoute: ApiShuttleTimeTableRulesRoute,
-  ApiSubwayArrivalRoute: ApiSubwayArrivalRoute,
   ApiSubwayPreviewRoute: ApiSubwayPreviewRoute,
+  ApiSubwayRealtimeRoute: ApiSubwayRealtimeRoute,
   ApiSubwayTimetableRoute: ApiSubwayTimetableRoute,
   ApiShuttleV2StopsRoute: ApiShuttleV2StopsRoute,
   ApiShuttleV2TimesRoute: ApiShuttleV2TimesRoute,

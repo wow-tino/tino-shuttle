@@ -3,8 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import ky from "ky";
 
 import type {
-  GetSubwayArrivalResponse,
-  GetSubwayArrivalTrainRow,
+  GetSubwayRealtimeResponse,
+  GetSubwayRealtimeTrainRow,
   RealtimeArrivalItem,
 } from "#/domain/subway/api/models";
 import { SeoulRealtimeStationArrivalApiResponseSchema } from "#/domain/subway/api/models";
@@ -12,7 +12,7 @@ import { TtlMemoryCache } from "#/server/ttl-memory-cache";
 import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
 import { ms } from "#/shared/utils";
 
-const subwayArrivalCache = new TtlMemoryCache(15_000);
+const subwayRealtimeCache = new TtlMemoryCache(15_000);
 
 const SEOUL_REALTIME_ARRIVAL_START_INDEX = 1;
 const SEOUL_REALTIME_ARRIVAL_END_INDEX = 40;
@@ -23,7 +23,7 @@ const DEFAULT_LIMIT_PER_DIRECTION = 3;
 
 const subwayApiKey = process.env.SUBWAY_API_KEY ?? "";
 
-function normalizePreviewArrivalMessage(rawMessage: string): string {
+function normalizeRealtimeMessage(rawMessage: string): string {
   const trimmed = rawMessage.replace(SQUARE_BRACKET_PATTERN, "$1").trim();
   const nthPrevStationMatch = trimmed.match(NTH_PREV_STATION_HEAD_PATTERN);
   if (nthPrevStationMatch?.[1]) {
@@ -55,12 +55,12 @@ function resolveTowardLabel(destinationStationRaw: string): string {
   return trimmed.endsWith("행") ? trimmed : `${trimmed}행`;
 }
 
-function resolveLocationText(arrivalMessageRaw: string): string {
-  const trimmed: string = arrivalMessageRaw.trim();
+function resolveLocationText(realtimeMessageRaw: string): string {
+  const trimmed: string = realtimeMessageRaw.trim();
   return trimmed.length > 0 ? trimmed : "도착 정보 없음";
 }
 
-function mapRealtimeItemToTrainRow(train: RealtimeArrivalItem): GetSubwayArrivalTrainRow {
+function mapRealtimeItemToTrainRow(train: RealtimeArrivalItem): GetSubwayRealtimeTrainRow {
   return {
     toward: resolveTowardLabel(train.bstatnNm),
     location: resolveLocationText(train.arvlMsg2),
@@ -70,8 +70,8 @@ function mapRealtimeItemToTrainRow(train: RealtimeArrivalItem): GetSubwayArrival
 
 /** 서울 API가 주는 순서를 유지하며 상행·내선 / 하행·외선으로 각각 최대 `limitPerDirection`개만 수집합니다. */
 function buildUphillDownwardArrays(input: { arrivals: RealtimeArrivalItem[] }) {
-  const uphill: GetSubwayArrivalTrainRow[] = [];
-  const downward: GetSubwayArrivalTrainRow[] = [];
+  const uphill: GetSubwayRealtimeTrainRow[] = [];
+  const downward: GetSubwayRealtimeTrainRow[] = [];
 
   for (const train of input.arrivals) {
     if (isUphillDirection(train.updnLine) && uphill.length < DEFAULT_LIMIT_PER_DIRECTION) {
@@ -87,7 +87,7 @@ function buildUphillDownwardArrays(input: { arrivals: RealtimeArrivalItem[] }) {
   return { uphill, downward };
 }
 
-export const Route = createFileRoute("/api/subway/arrival")({
+export const Route = createFileRoute("/api/subway/realtime")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
@@ -99,8 +99,8 @@ export const Route = createFileRoute("/api/subway/arrival")({
             return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
           }
 
-          const cacheKey = `subway:arrival:v3:${station}`;
-          const cached = subwayArrivalCache.get<GetSubwayArrivalResponse>(cacheKey);
+          const cacheKey = `subway:realtime:v1:${station}`;
+          const cached = subwayRealtimeCache.get<GetSubwayRealtimeResponse>(cacheKey);
           if (cached) {
             return withSuccessResponse(cached);
           }
@@ -130,19 +130,19 @@ export const Route = createFileRoute("/api/subway/arrival")({
             updnLine: arrival.updnLine ?? "",
             trainLineNm: arrival.trainLineNm ?? "",
             bstatnNm: arrival.bstatnNm ?? "",
-            arvlMsg2: normalizePreviewArrivalMessage(arrival.arvlMsg2 ?? ""),
+            arvlMsg2: normalizeRealtimeMessage(arrival.arvlMsg2 ?? ""),
             btrainSttus: arrival.btrainSttus ?? "",
           }));
 
           const { uphill, downward } = buildUphillDownwardArrays({ arrivals });
 
-          const payload: GetSubwayArrivalResponse = {
+          const payload: GetSubwayRealtimeResponse = {
             station,
             uphill,
             downward,
           };
 
-          subwayArrivalCache.set(cacheKey, payload);
+          subwayRealtimeCache.set(cacheKey, payload);
           return withSuccessResponse(payload);
         } catch (error: unknown) {
           return withErrorResponseFromUnknown(error);
