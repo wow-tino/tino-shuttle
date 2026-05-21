@@ -11,7 +11,7 @@ export const Route = createFileRoute("/shuttle")({
   loader: async ({ context }) => {
     const weekday = getServiceDayForLocalDate(new Date());
 
-    await Promise.all([
+    await Promise.allSettled([
       context.queryClient.ensureQueryData(SHUTTLE_QUERIES.GetShuttleStops()),
       weekday === "SUNDAY"
         ? Promise.resolve()

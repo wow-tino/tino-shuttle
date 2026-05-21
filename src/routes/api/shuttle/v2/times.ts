@@ -102,7 +102,8 @@ export const Route = createFileRoute("/api/shuttle/v2/times")({
           const { data: timeData, error: timeError } = await supabase
             .from("shuttle_v2_schedule_entry")
             .select("*")
-            .eq("route_id", routeRows[0].id);
+            .eq("route_id", routeRows[0].id)
+            .eq("service_day", weekday);
 
           if (timeError) {
             return withErrorResponse("데이터를 가져오는데 실패했습니다.", 500);

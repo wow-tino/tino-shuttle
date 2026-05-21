@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "node --env-file=.env .output/server/index.mjs",
     "check": "prettier --write . && eslint --fix",
     "lint": "eslint --fix \"**/*.{ts,tsx,md}\"",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -71,7 +71,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "lightningcss"
+      "lightningcss",
+      "unrs-resolver"
     ]
   }
 }
