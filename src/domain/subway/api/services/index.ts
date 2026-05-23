@@ -5,13 +5,16 @@ import type {
   GetSubwayTimetableResponse,
 } from "#/domain/subway/api/models";
 import type { ApiResponseWithBody } from "#/shared/api";
-import { api } from "#/shared/api";
 import { apiV2 } from "#/shared/api/instance";
 
 export const getSubwayHomePreview = async (stationName: string) => {
-  return api<GetSubwayHomePreviewResponse>(`subway/preview`, {
-    searchParams: { stationName },
-  });
+  const response = await apiV2
+    .get<ApiResponseWithBody<GetSubwayHomePreviewResponse>>("subway/preview", {
+      searchParams: { stationName },
+    })
+    .json();
+
+  return response.data;
 };
 
 export const getSubwayRealtime = async (lineName: GetSubwayTimetableRequest) => {

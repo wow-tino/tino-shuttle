@@ -30,7 +30,7 @@ interface ShuttleHomeScreenProps {
   weekday: ShuttleServiceDay;
 }
 
-export function ShuttleHomeScreen({ weekday }: ShuttleHomeScreenProps) {
+export function HomeScreen({ weekday }: ShuttleHomeScreenProps) {
   const { data } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
   const departure = useSelectedShuttleStopStore((state) => state.departure);
   const arrival = useSelectedShuttleStopStore((state) => state.arrival);

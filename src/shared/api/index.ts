@@ -1,11 +1,6 @@
-export { api } from "./instance";
 export {
+  type ApiResponseWithBody,
   withErrorResponse,
   withErrorResponseFromUnknown,
   withSuccessResponse,
 } from "./api-response-with-body";
-export {
-  ApiResponseWithBodySchema,
-  type ApiResponseWithBody,
-  type ApiResponseWithBodyUnknown,
-} from "./schemas/api-response-with-body-schema";

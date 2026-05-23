@@ -15,8 +15,6 @@ export const SeoulRealtimeArrivalItemSchema = z.object({
   btrainSttus: z.string().optional(),
 });
 
-export type SeoulRealtimeArrivalItem = z.infer<typeof SeoulRealtimeArrivalItemSchema>;
-
 /** 앱 프론트에서 실제로 사용하는 실시간 도착 정보 */
 export const RealtimeArrivalItemSchema = z.object({
   subwayId: z.string(),
@@ -57,10 +55,6 @@ export const SeoulRealtimeStationArrivalApiResponseSchema = z.object({
     .optional(),
   realtimeArrivalList: z.array(SeoulRealtimeArrivalItemSchema).optional(),
 });
-
-export type SeoulRealtimeStationArrivalApiResponse = z.infer<
-  typeof SeoulRealtimeStationArrivalApiResponseSchema
->;
 
 export const GetSubwayHomePreviewResponseSchema = z.object({
   stationName: z.string(),

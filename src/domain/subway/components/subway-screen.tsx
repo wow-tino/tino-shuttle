@@ -139,7 +139,7 @@ export function SubwayScreen() {
       </div>
 
       {isLoading ? (
-        <Loading containerClassName="min-h-app-main" title="전철 정보를 불러오는 중 이에요..." />
+        <Loading containerClassName="min-h-app-main" title="전철 정보를 불러오는 중이에요..." />
       ) : isError ? (
         <Txt className="mx-auto">전철 정보를 불러오는 중 오류가 발생했어요</Txt>
       ) : selectedTab === "realtime" && realtimeData ? (

@@ -13,7 +13,7 @@ import { ms } from "#/shared/utils";
 export const SUBWAY_QUERIES = {
   GetSubwayHomePreview: (stationName: string) =>
     queryOptions({
-      queryKey: subwayKeys.detail(stationName),
+      queryKey: subwayKeys.preview(stationName),
       queryFn: () => getSubwayHomePreview(stationName),
       refetchInterval: ms.seconds(25),
     }),
