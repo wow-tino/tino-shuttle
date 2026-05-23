@@ -25,11 +25,11 @@ import {
 import { Txt } from "#/shared/components/txt";
 import type { ShuttleServiceDay } from "#/shared/types/shuttle";
 
-interface TimetableScreenProps {
+interface ShuttleScreenProps {
   weekday: ShuttleServiceDay;
 }
 
-export function TimetableScreen({ weekday }: TimetableScreenProps) {
+export function ShuttleScreen({ weekday }: ShuttleScreenProps) {
   const { data: shuttleStops } = useSuspenseQuery(SHUTTLE_QUERIES.GetShuttleStops());
   const departure = useSelectedShuttleStopStore((state) => state.departure);
   const arrival = useSelectedShuttleStopStore((state) => state.arrival);

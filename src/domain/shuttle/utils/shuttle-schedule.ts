@@ -1,27 +1,11 @@
 import type { GetShuttleTimeProps } from "#/domain/shuttle/api/models";
 
-export type UpcomingShuttleFixedDeparture = {
-  entry: GetShuttleTimeProps;
-  departAt: Date;
-  remainingMs: number;
-  remainingLabelKo: string;
-  scheduleLabelKo: string;
-};
-
 export type UpcomingShuttleScheduleEntry = {
   entry: GetShuttleTimeProps;
   startAt: Date;
   remainingMs: number;
   remainingLabelKo: string;
 };
-
-export type ShuttleFixedDeparturePreview =
-  | { kind: "empty" }
-  | {
-      kind: "upcoming";
-      next: UpcomingShuttleFixedDeparture;
-      following: UpcomingShuttleFixedDeparture | null;
-    };
 
 export type ShuttleWindowPreview =
   | { kind: "empty" }
@@ -123,31 +107,6 @@ function formatWindowRangeKo(windowStartAt: Date, windowEndAt: Date): string {
   return `${formatDateAsClockHHmm(windowStartAt)} ~ ${formatDateAsClockHHmm(windowEndAt)}`;
 }
 
-function buildScheduleLabelKo(entry: GetShuttleTimeProps, departAt: Date): string {
-  const clock: string = formatDateAsClockHHmm(departAt);
-  if (entry.isFirstDeparture) {
-    return `첫차 · ${clock} 출발`;
-  }
-  if (entry.isLastDeparture) {
-    return `막차 · ${clock} 출발`;
-  }
-  return `${clock} 출발`;
-}
-
-function mapRowToUpcoming(
-  row: { entry: GetShuttleTimeProps; departAt: Date },
-  referenceNow: Date
-): UpcomingShuttleFixedDeparture {
-  const remainingMs = row.departAt.getTime() - referenceNow.getTime();
-  return {
-    entry: row.entry,
-    departAt: row.departAt,
-    remainingMs,
-    remainingLabelKo: formatRemainingMsKo(remainingMs),
-    scheduleLabelKo: buildScheduleLabelKo(row.entry, row.departAt),
-  };
-}
-
 function getScheduleEntryStartAt(entry: GetShuttleTimeProps, referenceNow: Date): Date | null {
   if (entry.kind === "FIXED_DEPARTURE") {
     if (entry.departTime === null) {
@@ -172,41 +131,6 @@ function mapScheduleEntryToUpcoming(
     remainingMs,
     remainingLabelKo: formatRemainingMsKo(remainingMs),
     startAt: row.startAt,
-  };
-}
-
-export function getShuttleFixedDeparturePreview(
-  times: GetShuttleTimeProps[],
-  referenceNow: Date
-): ShuttleFixedDeparturePreview {
-  const candidates: Array<{ entry: GetShuttleTimeProps; departAt: Date }> = [];
-
-  for (const item of times) {
-    if (item.kind !== "FIXED_DEPARTURE" || item.departTime === null) {
-      continue;
-    }
-    const departAt = parseDepartTimeOnCalendarDay(referenceNow, item.departTime);
-    if (departAt === null) {
-      continue;
-    }
-    if (departAt.getTime() <= referenceNow.getTime()) {
-      continue;
-    }
-    candidates.push({ entry: item, departAt });
-  }
-
-  candidates.sort((a, b) => a.departAt.getTime() - b.departAt.getTime());
-
-  if (candidates.length === 0) {
-    return { kind: "empty" };
-  }
-
-  const first: { entry: GetShuttleTimeProps; departAt: Date } = candidates[0];
-
-  return {
-    kind: "upcoming",
-    next: mapRowToUpcoming(first, referenceNow),
-    following: candidates.length >= 2 ? mapRowToUpcoming(candidates[1], referenceNow) : null,
   };
 }
 
@@ -293,18 +217,4 @@ export function getActiveShuttleWindowPreview(
     windowLabelKo: formatWindowRangeKo(first.windowStartAt, first.windowEndAt),
     windowStartAt: first.windowStartAt,
   };
-}
-
-export function formatShuttleTimeOnCalendarDay(
-  calendarReference: Date,
-  value: string | null
-): string | null {
-  if (value === null || value.trim() === "") {
-    return null;
-  }
-  const parsed: Date | null = parseDepartTimeOnCalendarDay(calendarReference, value);
-  if (parsed === null) {
-    return value;
-  }
-  return formatDateAsClockHHmm(parsed);
 }

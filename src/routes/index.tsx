@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { SHUTTLE_QUERIES } from "#/domain/shuttle/api/queries";
-import { ShuttleHomeScreen } from "#/domain/shuttle/components/shuttle-home-screen";
+import { HomeScreen } from "#/domain/shuttle/components/home-screen";
 import { DEFAULT_SHUTTLE_STOP_SELECTION } from "#/domain/shuttle/constants/default-stop-selection";
 import { getServiceDayForLocalDate } from "#/domain/shuttle/utils/service-day";
 import { ErrorBoundary } from "#/shared/components/error-boundary";
@@ -25,19 +25,19 @@ export const Route = createFileRoute("/")({
 
     return weekday;
   },
-  component: ShuttleHomeRoute,
+  component: HomeRoute,
 });
 
-function ShuttleHomeRoute() {
+function HomeRoute() {
   const weekday = Route.useLoaderData();
 
   return (
     <ErrorBoundary
       suspenseFallback={
-        <Loading containerClassName="min-h-screen" title="탑승 노선을 불러오는 중 이에요..." />
+        <Loading containerClassName="min-h-screen" title="탑승 노선을 불러오는 중이에요..." />
       }
     >
-      <ShuttleHomeScreen weekday={weekday} />
+      <HomeScreen weekday={weekday} />
     </ErrorBoundary>
   );
 }
