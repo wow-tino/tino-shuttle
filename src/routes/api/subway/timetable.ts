@@ -284,6 +284,14 @@ async function getTrainSchedulesByDirections(input: {
   return trainScheduleGroups.flat();
 }
 
+function getKoreanDate() {
+  return new Date(
+    new Date().toLocaleString("en-US", {
+      timeZone: "Asia/Seoul",
+    })
+  );
+}
+
 export const Route = createFileRoute("/api/subway/timetable")({
   server: {
     handlers: {
@@ -305,7 +313,7 @@ export const Route = createFileRoute("/api/subway/timetable")({
             return withErrorResponse("SUBWAY_TIMETABLE_KEY 환경변수가 필요합니다.", 500);
           }
 
-          const now = new Date();
+          const now = getKoreanDate();
           const weekdayName = resolveWeekdayName(now);
           const searchDateTime = formatLocalDateTime(now);
 
