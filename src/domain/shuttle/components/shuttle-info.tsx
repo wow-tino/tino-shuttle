@@ -228,12 +228,14 @@ export function ShuttleInfo({ departure, arrival, weekday }: ShuttleInfoProps) {
       <div className="flex items-center justify-between">
         <Txt typography="headline">셔틀버스</Txt>
         <div className="flex items-center gap-2">
-          <p className="text-dark-gray">{updatedAtLabel}</p>
+          <Txt className="text-dark-gray" typography="caption">
+            {updatedAtLabel}
+          </Txt>
           <button
             aria-label="셔틀 시간 새로고침"
             disabled={isFetching}
             onClick={onRefetchShuttleTimes}
-            className={cn(isFetching && "opacity-50")}
+            className={cn(isFetching && "animate-spin opacity-50")}
           >
             <img src={refreshIcon} alt="refresh" />
           </button>
