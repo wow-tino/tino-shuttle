@@ -6,12 +6,14 @@ import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 const config = defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
+
   plugins: [
     devtools(),
-    tsconfigPaths({ projects: ["./tsconfig.json"] }),
     tailwindcss(),
     tanstackStart(),
     nitro(),
@@ -68,6 +70,27 @@ const config = defineConfig({
       },
     }),
   ],
+
+  build: {
+    rolldownOptions: {
+      output: {
+        minify: {
+          compress: {
+            dropConsole: true,
+          },
+        },
+        codeSplitting: {
+          groups: [
+            {
+              name: "react-vendor",
+              test: /[\\/]node_modules[\\/].*[\\/](react|react-dom|scheduler)[\\/]/,
+              priority: 30,
+            },
+          ],
+        },
+      },
+    },
+  },
 });
 
 export default config;
