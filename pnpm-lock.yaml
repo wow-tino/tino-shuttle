@@ -105,9 +105,6 @@ importers:
       '@tanstack/eslint-config':
         specifier: latest
         version: 0.4.0(@typescript-eslint/utils@8.58.0(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3)
-      '@types/navermaps':
-        specifier: ^3.9.1
-        version: 3.9.1
       '@types/node':
         specifier: ^22.10.2
         version: 22.19.15
@@ -2351,9 +2348,6 @@ packages:
 
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
-
-  '@types/navermaps@3.9.1':
-    resolution: {integrity: sha512-XCYtuJ0mYaXx5lBeB0iahk+sPG7Q9tLHQGR6AkGCOGwrRG8qowdG5/FIYlI7am59j/Hm4vaiR+eRZ31kTgMWjA==}
 
   '@types/node@22.19.15':
     resolution: {integrity: sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==}
@@ -7286,10 +7280,6 @@ snapshots:
 
   '@types/json5@0.0.29':
     optional: true
-
-  '@types/navermaps@3.9.1':
-    dependencies:
-      '@types/geojson': 7946.0.16
 
   '@types/node@22.19.15':
     dependencies:

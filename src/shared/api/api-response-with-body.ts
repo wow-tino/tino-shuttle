@@ -1,4 +1,8 @@
-import type { ApiResponseWithBody } from "./schemas/api-response-with-body-schema";
+export type ApiResponseWithBody<T = unknown> = {
+  message: string;
+  status: number;
+  data: T;
+};
 
 const DEFAULT_SUCCESS_MESSAGE = "OK";
 
