@@ -17,8 +17,20 @@ const SQUARE_BRACKET_PATTERN = /\[([^\]]*)\]/g;
 const NTH_PREV_STATION_HEAD_PATTERN = /^(\d+)번째\s*전역/;
 
 const DEFAULT_LIMIT_PER_DIRECTION = 3;
+const STATION_NAME = "정왕";
+const ALLOWED_LINE_NAMES = ["4호선", "수인분당선"] as const;
+const LINE_SUBWAY_ID_MAP = {
+  "4호선": "1004",
+  수인분당선: "1075",
+} as const satisfies Record<(typeof ALLOWED_LINE_NAMES)[number], string>;
 
 const subwayApiKey = process.env.SUBWAY_API_KEY ?? "";
+
+type SubwayRealtimeLineName = (typeof ALLOWED_LINE_NAMES)[number];
+
+function isAllowedLineName(lineName: string): lineName is SubwayRealtimeLineName {
+  return ALLOWED_LINE_NAMES.some((allowedLineName) => allowedLineName === lineName);
+}
 
 function normalizeRealtimeMessage(rawMessage: string): string {
   const trimmed = rawMessage.replace(SQUARE_BRACKET_PATTERN, "$1").trim();
@@ -90,15 +102,20 @@ export const Route = createFileRoute("/api/subway/realtime")({
       GET: async ({ request }: { request: Request }) => {
         try {
           const requestUrl = new URL(request.url);
-          const stationNameRaw = requestUrl.searchParams.get("stationName");
-          const station = (stationNameRaw ?? "").trim();
-          if (station.length === 0) {
-            return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
+          const lineNameRaw = requestUrl.searchParams.get("lineNm");
+          const lineName = (lineNameRaw ?? "").trim();
+
+          if (lineName.length === 0) {
+            return withErrorResponse("lineNm 쿼리가 필요합니다.", 400);
+          }
+
+          if (!isAllowedLineName(lineName)) {
+            return withErrorResponse("lineNm은 4호선 또는 수인분당선만 가능합니다.", 400);
           }
 
           const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
             apiKey: subwayApiKey,
-            stationName: station,
+            stationName: STATION_NAME,
           });
 
           const raw = await ky
@@ -116,19 +133,22 @@ export const Route = createFileRoute("/api/subway/realtime")({
             throw withErrorResponse(errorMessage, 500);
           }
 
-          const arrivals = (parsed.data.realtimeArrivalList ?? []).map((arrival) => ({
-            subwayId: arrival.subwayId ?? "",
-            updnLine: arrival.updnLine ?? "",
-            trainLineNm: arrival.trainLineNm ?? "",
-            bstatnNm: arrival.bstatnNm ?? "",
-            arvlMsg2: normalizeRealtimeMessage(arrival.arvlMsg2 ?? ""),
-            btrainSttus: arrival.btrainSttus ?? "",
-          }));
+          const targetSubwayId = LINE_SUBWAY_ID_MAP[lineName];
+          const arrivals = (parsed.data.realtimeArrivalList ?? [])
+            .filter((arrival) => (arrival.subwayId ?? "") === targetSubwayId)
+            .map((arrival) => ({
+              subwayId: arrival.subwayId ?? "",
+              updnLine: arrival.updnLine ?? "",
+              trainLineNm: arrival.trainLineNm ?? "",
+              bstatnNm: arrival.bstatnNm ?? "",
+              arvlMsg2: normalizeRealtimeMessage(arrival.arvlMsg2 ?? ""),
+              btrainSttus: arrival.btrainSttus ?? "",
+            }));
 
           const { uphill, downward } = buildUphillDownwardArrays({ arrivals });
 
           const payload: GetSubwayRealtimeResponse = {
-            station,
+            station: STATION_NAME,
             uphill,
             downward,
           };

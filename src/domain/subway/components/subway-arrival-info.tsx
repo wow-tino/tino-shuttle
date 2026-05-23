@@ -90,7 +90,7 @@ export function SubwayArrival() {
             aria-label="전철 도착 정보 새로고침"
             disabled={isFetching}
             onClick={onRefreshClick}
-            className={cn(isFetching && "opacity-50")}
+            className={cn(isFetching && "animate-spin opacity-50")}
           >
             <img src={refreshIcon} alt="refresh" />
           </button>

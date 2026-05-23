@@ -14,10 +14,10 @@ export const getSubwayHomePreview = async (stationName: string) => {
   });
 };
 
-export const getSubwayRealtime = async (stationName: string) => {
+export const getSubwayRealtime = async (lineName: GetSubwayTimetableRequest) => {
   return apiV2
     .get<ApiResponseWithBody<GetSubwayRealtimeResponse>>(`subway/realtime`, {
-      searchParams: { stationName },
+      searchParams: { lineNm: lineName },
     })
     .json();
 };

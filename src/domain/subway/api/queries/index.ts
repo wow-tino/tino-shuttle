@@ -17,10 +17,10 @@ export const SUBWAY_QUERIES = {
       queryFn: () => getSubwayHomePreview(stationName),
       refetchInterval: ms.seconds(25),
     }),
-  GetSubwayRealtime: (stationName: string) =>
+  GetSubwayRealtime: (lineName: GetSubwayTimetableRequest) =>
     queryOptions({
-      queryKey: subwayKeys.realtime(stationName),
-      queryFn: () => getSubwayRealtime(stationName),
+      queryKey: subwayKeys.realtime(lineName),
+      queryFn: () => getSubwayRealtime(lineName),
       refetchInterval: ms.seconds(25),
     }),
   GetSubwayTimetable: (lineName: GetSubwayTimetableRequest) =>

@@ -51,7 +51,7 @@ export function parseDepartTimeOnCalendarDay(
   }
 
   if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed) || trimmed.endsWith("Z")) {
-    const parsedMs: number = Date.parse(trimmed);
+    const parsedMs = Date.parse(trimmed);
     if (Number.isNaN(parsedMs)) {
       return null;
     }
@@ -62,8 +62,8 @@ export function parseDepartTimeOnCalendarDay(
   if (clockParts.length >= 2 && clockParts.length <= 3) {
     const hourToken: string = clockParts[0];
     const minuteToken: string = clockParts[1];
-    const hoursParsed: number = Number.parseInt(hourToken, 10);
-    const minutesParsed: number = Number.parseInt(minuteToken, 10);
+    const hoursParsed = Number.parseInt(hourToken, 10);
+    const minutesParsed = Number.parseInt(minuteToken, 10);
     if (
       !Number.isNaN(hoursParsed) &&
       !Number.isNaN(minutesParsed) &&
@@ -76,7 +76,7 @@ export function parseDepartTimeOnCalendarDay(
       if (clockParts.length === 3) {
         rawSeconds = Number.parseInt(clockParts[2], 10);
       }
-      const secondsParsed: number = Number.isNaN(rawSeconds) ? 0 : rawSeconds;
+      const secondsParsed = Number.isNaN(rawSeconds) ? 0 : rawSeconds;
       if (secondsParsed < 0 || secondsParsed > 59) {
         return null;
       }
@@ -86,7 +86,7 @@ export function parseDepartTimeOnCalendarDay(
     }
   }
 
-  const fallbackMs: number = Date.parse(trimmed);
+  const fallbackMs = Date.parse(trimmed);
   if (!Number.isNaN(fallbackMs)) {
     return new Date(fallbackMs);
   }
@@ -95,21 +95,27 @@ export function parseDepartTimeOnCalendarDay(
 }
 
 export function formatRemainingMsKo(remainingMs: number): string {
-  const totalSec: number = Math.max(0, Math.floor(remainingMs / 1000));
-  const minutes: number = Math.floor(totalSec / 60);
-  const seconds: number = totalSec % 60;
+  const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+
+  if (hours > 0) {
+    return `${hours}시간 ${minutes}분 ${seconds}초`;
+  }
+
   return `${minutes}분 ${seconds}초`;
 }
 
 export function formatDateAsClockHHmm(date: Date): string {
-  const h: number = date.getHours();
-  const m: number = date.getMinutes();
+  const h = date.getHours();
+  const m = date.getMinutes();
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 export function formatDateAsKoreanClock(date: Date): string {
-  const hours: number = date.getHours();
-  const minutes: number = date.getMinutes();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
   return `${hours}시 ${String(minutes).padStart(2, "0")}분`;
 }
 
@@ -132,7 +138,7 @@ function mapRowToUpcoming(
   row: { entry: GetShuttleTimeProps; departAt: Date },
   referenceNow: Date
 ): UpcomingShuttleFixedDeparture {
-  const remainingMs: number = row.departAt.getTime() - referenceNow.getTime();
+  const remainingMs = row.departAt.getTime() - referenceNow.getTime();
   return {
     entry: row.entry,
     departAt: row.departAt,
@@ -160,7 +166,7 @@ function mapScheduleEntryToUpcoming(
   row: { entry: GetShuttleTimeProps; startAt: Date },
   referenceNow: Date
 ): UpcomingShuttleScheduleEntry {
-  const remainingMs: number = row.startAt.getTime() - referenceNow.getTime();
+  const remainingMs = row.startAt.getTime() - referenceNow.getTime();
   return {
     entry: row.entry,
     remainingMs,
@@ -262,7 +268,7 @@ export function getActiveShuttleWindowPreview(
       continue;
     }
 
-    const referenceTime: number = referenceNow.getTime();
+    const referenceTime = referenceNow.getTime();
     if (windowStartAt.getTime() <= referenceTime && referenceTime <= windowEndAt.getTime()) {
       candidates.push({ entry: item, windowEndAt, windowStartAt });
     }
