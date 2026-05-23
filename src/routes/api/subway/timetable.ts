@@ -31,18 +31,15 @@ function isAllowedLineName(lineName: string): lineName is SubwayTimetableLineNam
   return ALLOWED_LINE_NAMES.some((allowedLineName) => allowedLineName === lineName);
 }
 
-function resolveWeekdayName(referenceDate: Date): string {
+function resolveWeekdayName(referenceDate: Date) {
   const day = referenceDate.getDay();
-  if (day === 0) {
-    return "일요일";
-  }
-  if (day === 6) {
-    return "토요일";
+  if (day === 0 || day === 6) {
+    return "주말";
   }
   return "평일";
 }
 
-function formatLocalDateTime(referenceDate: Date): string {
+function formatLocalDateTime(referenceDate: Date) {
   const year = referenceDate.getFullYear().toString();
   const month = (referenceDate.getMonth() + 1).toString().padStart(2, "0");
   const date = referenceDate.getDate().toString().padStart(2, "0");
@@ -52,7 +49,7 @@ function formatLocalDateTime(referenceDate: Date): string {
   return `${year}-${month}-${date}T${hours}:${minutes}:${seconds}`;
 }
 
-function encodePublicDataServiceKey(serviceKey: string): string {
+function encodePublicDataServiceKey(serviceKey: string) {
   return serviceKey.includes("%") ? serviceKey : encodeURIComponent(serviceKey);
 }
 
@@ -63,7 +60,7 @@ function buildSubwayTimetableUrl(input: {
   lineName: string;
   stationName: string;
   searchDateTime: string;
-}): string {
+}) {
   const searchParams = new URLSearchParams({
     dataType: "JSON",
     tmprTmtblYn: "N",
@@ -99,9 +96,7 @@ function resolveDirectionGroups(lineName: string): {
   };
 }
 
-function extractTrainScheduleItems(
-  response: DataGoKrTrainScheduleApiResponse
-): DataGoKrTrainScheduleItem[] {
+function extractTrainScheduleItems(response: DataGoKrTrainScheduleApiResponse) {
   const items = response.response.body?.items;
   if (items === undefined || items === "") {
     return [];
@@ -114,11 +109,11 @@ function extractTrainScheduleItems(
   return Array.isArray(item) ? item : [item];
 }
 
-function isNoDataResultCode(resultCode: string): boolean {
+function isNoDataResultCode(resultCode: string) {
   return resultCode === DATA_GO_KR_NO_DATA_CODE || resultCode === DATA_GO_KR_NO_DATA_ERROR_CODE;
 }
 
-function assertSuccessfulDataGoKrResponse(response: DataGoKrTrainScheduleApiResponse): void {
+function assertSuccessfulDataGoKrResponse(response: DataGoKrTrainScheduleApiResponse) {
   const resultCode = response.response.header?.resultCode;
   if (
     resultCode === undefined ||
@@ -135,7 +130,7 @@ function assertSuccessfulDataGoKrResponse(response: DataGoKrTrainScheduleApiResp
   throw new Error(resultMessage);
 }
 
-function parseScheduleTimeOnDate(input: { referenceDate: Date; timeText: string }): Date | null {
+function parseScheduleTimeOnDate(input: { referenceDate: Date; timeText: string }) {
   const trimmedTimeText = input.timeText.trim();
   const match = trimmedTimeText.match(TWO_DIGIT_TIME_PATTERN);
   if (!match?.[1] || !match[2]) {
@@ -157,7 +152,7 @@ function parseScheduleTimeOnDate(input: { referenceDate: Date; timeText: string 
 function resolveScheduleDate(input: {
   referenceDate: Date;
   trainSchedule: DataGoKrTrainScheduleItem;
-}): Date | null {
+}) {
   const timeText =
     input.trainSchedule.trainDptreTm ??
     input.trainSchedule.dptreTm ??
@@ -169,7 +164,7 @@ function resolveScheduleDate(input: {
   return parseScheduleTimeOnDate({ referenceDate: input.referenceDate, timeText });
 }
 
-function resolveTowardLabel(trainSchedule: DataGoKrTrainScheduleItem): string {
+function resolveTowardLabel(trainSchedule: DataGoKrTrainScheduleItem) {
   const destinationStationName =
     trainSchedule.arvlStnNm?.trim() ?? trainSchedule.dptreStnNm?.trim() ?? "";
   if (destinationStationName.length === 0) {
@@ -180,7 +175,7 @@ function resolveTowardLabel(trainSchedule: DataGoKrTrainScheduleItem): string {
     : `${destinationStationName}행`;
 }
 
-function formatScheduleTimeText(timeText: string): string {
+function formatScheduleTimeText(timeText: string) {
   const trimmedTimeText = timeText.trim();
   const match = trimmedTimeText.match(TWO_DIGIT_TIME_PATTERN);
   if (!match?.[1] || !match[2]) {
@@ -189,7 +184,7 @@ function formatScheduleTimeText(timeText: string): string {
   return `${match[1].padStart(2, "0")}:${match[2]}`;
 }
 
-function resolveLocationText(trainSchedule: DataGoKrTrainScheduleItem): string {
+function resolveLocationText(trainSchedule: DataGoKrTrainScheduleItem) {
   const departureTime = (trainSchedule.trainDptreTm ?? trainSchedule.dptreTm)?.trim();
   if (departureTime !== undefined && departureTime.length > 0) {
     return `${formatScheduleTimeText(departureTime)} 출발`;
@@ -203,9 +198,7 @@ function resolveLocationText(trainSchedule: DataGoKrTrainScheduleItem): string {
   return "시간표 정보 없음";
 }
 
-function mapTrainScheduleToTrainRow(
-  trainSchedule: DataGoKrTrainScheduleItem
-): GetSubwayTimetableTrainRow {
+function mapTrainScheduleToTrainRow(trainSchedule: DataGoKrTrainScheduleItem) {
   return {
     toward: resolveTowardLabel(trainSchedule),
     time: resolveLocationText(trainSchedule),
@@ -218,7 +211,7 @@ async function getTrainSchedulesByDirection(input: {
   lineName: string;
   stationName: string;
   searchDateTime: string;
-}): Promise<DataGoKrTrainScheduleItem[]> {
+}) {
   const timetableUrl = buildSubwayTimetableUrl({
     serviceKey: subwayTimetableKey,
     direction: input.direction,

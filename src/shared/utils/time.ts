@@ -40,3 +40,11 @@ export function formatHm(date: Date) {
   const m = date.getMinutes().toString().padStart(2, "0");
   return `${h}:${m}`;
 }
+
+export function formatUpdatedTime(timestamp: number) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(timestamp));
+}
