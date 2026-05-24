@@ -1,37 +1,46 @@
-export type ShuttleServiceDay = "WEEKDAY" | "SATURDAY" | "SUNDAY" | "HOLIDAY";
+import { z } from "zod";
 
-export type ShuttleTimetableMode = "FIXED" | "FREQUENCY" | "ARRIVAL_LINKED";
+export const ShuttleServiceDaySchema = z.enum(["WEEKDAY", "SATURDAY", "SUNDAY"]);
+export const ShuttleOperatingServiceDaySchema = z.enum(["WEEKDAY", "SATURDAY"]);
+export const ShuttleKindSchema = z.enum(["FIXED_DEPARTURE", "ADHOC_WINDOW", "PASSENGER_INFO"]);
 
-export interface ShuttlePatternDto {
-  readonly id: number;
-  readonly code: string;
-  readonly nameKo: string;
-  readonly note: string | null;
-  readonly boardingLatitude: number | null;
-  readonly boardingLongitude: number | null;
-  readonly boardingEveningLatitude: number | null;
-  readonly boardingEveningLongitude: number | null;
-}
+export const ShuttleStopPropsSchema = z.object({
+  id: z.number(),
+  nameKo: z.string(),
+});
 
-export interface ShuttleTimetableRuleDto {
-  readonly id: number;
-  readonly patternId: number;
-  readonly serviceDay: ShuttleServiceDay;
-  readonly mode: ShuttleTimetableMode;
-  readonly hour: number | null;
-  readonly minute: number | null;
-  readonly startTime: string | null;
-  readonly endTime: string | null;
-  readonly headwayMin: number | null;
-  readonly linkedPatternId: number | null;
-  readonly offsetMin: number;
-  readonly note: string | null;
-}
+export type ShuttleStopProps = z.infer<typeof ShuttleStopPropsSchema>;
 
-export interface GetShuttlePatternsResponse {
-  readonly patterns: ShuttlePatternDto[];
-}
+export const GetShuttleStopsResponseSchema = z.array(ShuttleStopPropsSchema);
 
-export interface GetShuttleTimetableRulesResponse {
-  readonly rules: ShuttleTimetableRuleDto[];
-}
+export type GetShuttleStopsResponse = z.infer<typeof GetShuttleStopsResponseSchema>;
+
+export const GetShuttleTimesRequestSchema = z.object({
+  departure: z.string().min(1),
+  arrival: z.string().min(1),
+  weekday: ShuttleServiceDaySchema,
+});
+
+export type GetShuttleTimesRequest = z.infer<typeof GetShuttleTimesRequestSchema>;
+
+export const GetShuttleTimePropsSchema = z.object({
+  departTime: z.string().nullable(),
+  id: z.number(),
+  isFirstDeparture: z.boolean(),
+  isLastDeparture: z.boolean(),
+  kind: ShuttleKindSchema,
+  message: z.string().nullable(),
+  routeId: z.number(),
+  serviceDay: ShuttleOperatingServiceDaySchema,
+  windowEnd: z.string().nullable(),
+  windowStart: z.string().nullable(),
+});
+
+export type GetShuttleTimeProps = z.infer<typeof GetShuttleTimePropsSchema>;
+
+export const GetShuttleTimesResponseSchema = z.object({
+  viaStopNameKo: z.string().nullable(),
+  times: z.array(GetShuttleTimePropsSchema),
+});
+
+export type GetShuttleTimesResponse = z.infer<typeof GetShuttleTimesResponseSchema>;

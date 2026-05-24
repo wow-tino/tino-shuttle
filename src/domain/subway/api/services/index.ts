@@ -1,7 +1,34 @@
-import type { GetRealtimeStationArrivalResponse } from "#/domain/subway/api/models";
-import { api } from "#/shared/api";
+import type {
+  GetSubwayHomePreviewResponse,
+  GetSubwayRealtimeResponse,
+  GetSubwayTimetableRequest,
+  GetSubwayTimetableResponse,
+} from "#/domain/subway/api/models";
+import type { ApiResponseWithBody } from "#/shared/api";
+import { apiV2 } from "#/shared/api/instance";
 
-export const getRealtimeStationArrival = async (stationName: string) => {
-  const query: string = new URLSearchParams({ stationName }).toString();
-  return api<GetRealtimeStationArrivalResponse>(`subway/realtime-station-arrival?${query}`);
+export const getSubwayHomePreview = async (stationName: string) => {
+  const response = await apiV2
+    .get<ApiResponseWithBody<GetSubwayHomePreviewResponse>>("subway/preview", {
+      searchParams: { stationName },
+    })
+    .json();
+
+  return response.data;
+};
+
+export const getSubwayRealtime = async (lineName: GetSubwayTimetableRequest) => {
+  return apiV2
+    .get<ApiResponseWithBody<GetSubwayRealtimeResponse>>(`subway/realtime`, {
+      searchParams: { lineNm: lineName },
+    })
+    .json();
+};
+
+export const getSubwayTimetable = async (lineName: GetSubwayTimetableRequest) => {
+  return apiV2
+    .get<ApiResponseWithBody<GetSubwayTimetableResponse>>(`subway/timetable`, {
+      searchParams: { lineNm: lineName },
+    })
+    .json();
 };

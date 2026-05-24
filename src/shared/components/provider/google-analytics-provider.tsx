@@ -1,9 +1,10 @@
 const isProduction = import.meta.env.PROD;
+const isPreview = import.meta.env.VITE_PHASE === "preview";
 
 const GA_MEASUREMENT_ID = "G-30B2Q53F6T";
 
 export function GoogleAnalyticsProvider() {
-  return isProduction ? (
+  return isProduction && !isPreview ? (
     <>
       <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
       <script

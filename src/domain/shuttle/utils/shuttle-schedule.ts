@@ -1,0 +1,220 @@
+import type { GetShuttleTimeProps } from "#/domain/shuttle/api/models";
+
+export type UpcomingShuttleScheduleEntry = {
+  entry: GetShuttleTimeProps;
+  startAt: Date;
+  remainingMs: number;
+  remainingLabelKo: string;
+};
+
+export type ShuttleWindowPreview =
+  | { kind: "empty" }
+  | {
+      kind: "active";
+      entry: GetShuttleTimeProps;
+      windowEndAt: Date;
+      windowLabelKo: string;
+      windowStartAt: Date;
+    };
+
+export type ShuttleScheduleEntryPreview =
+  | { kind: "empty" }
+  | {
+      kind: "upcoming";
+      next: UpcomingShuttleScheduleEntry;
+      following: UpcomingShuttleScheduleEntry | null;
+    };
+
+export function parseDepartTimeOnCalendarDay(
+  calendarReference: Date,
+  departTime: string
+): Date | null {
+  const trimmed: string = departTime.trim();
+  if (trimmed === "") {
+    return null;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed) || trimmed.endsWith("Z")) {
+    const parsedMs = Date.parse(trimmed);
+    if (Number.isNaN(parsedMs)) {
+      return null;
+    }
+    return new Date(parsedMs);
+  }
+
+  const clockParts: string[] = trimmed.split(":");
+  if (clockParts.length >= 2 && clockParts.length <= 3) {
+    const hourToken: string = clockParts[0];
+    const minuteToken: string = clockParts[1];
+    const hoursParsed = Number.parseInt(hourToken, 10);
+    const minutesParsed = Number.parseInt(minuteToken, 10);
+    if (
+      !Number.isNaN(hoursParsed) &&
+      !Number.isNaN(minutesParsed) &&
+      hoursParsed >= 0 &&
+      hoursParsed <= 23 &&
+      minutesParsed >= 0 &&
+      minutesParsed <= 59
+    ) {
+      let rawSeconds = 0;
+      if (clockParts.length === 3) {
+        rawSeconds = Number.parseInt(clockParts[2], 10);
+      }
+      const secondsParsed = Number.isNaN(rawSeconds) ? 0 : rawSeconds;
+      if (secondsParsed < 0 || secondsParsed > 59) {
+        return null;
+      }
+      const d: Date = new Date(calendarReference);
+      d.setHours(hoursParsed, minutesParsed, secondsParsed, 0);
+      return d;
+    }
+  }
+
+  const fallbackMs = Date.parse(trimmed);
+  if (!Number.isNaN(fallbackMs)) {
+    return new Date(fallbackMs);
+  }
+
+  return null;
+}
+
+export function formatRemainingMsKo(remainingMs: number): string {
+  const totalSec = Math.max(0, Math.floor(remainingMs / 1000));
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+
+  if (hours > 0) {
+    return `${hours}시간 ${minutes}분 ${seconds}초`;
+  }
+
+  return `${minutes}분 ${seconds}초`;
+}
+
+export function formatDateAsClockHHmm(date: Date): string {
+  const h = date.getHours();
+  const m = date.getMinutes();
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+export function formatDateAsKoreanClock(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${hours}시 ${String(minutes).padStart(2, "0")}분`;
+}
+
+function formatWindowRangeKo(windowStartAt: Date, windowEndAt: Date): string {
+  return `${formatDateAsClockHHmm(windowStartAt)} ~ ${formatDateAsClockHHmm(windowEndAt)}`;
+}
+
+function getScheduleEntryStartAt(entry: GetShuttleTimeProps, referenceNow: Date): Date | null {
+  if (entry.kind === "FIXED_DEPARTURE") {
+    if (entry.departTime === null) {
+      return null;
+    }
+    return parseDepartTimeOnCalendarDay(referenceNow, entry.departTime);
+  }
+
+  if (entry.windowStart === null) {
+    return null;
+  }
+  return parseDepartTimeOnCalendarDay(referenceNow, entry.windowStart);
+}
+
+function mapScheduleEntryToUpcoming(
+  row: { entry: GetShuttleTimeProps; startAt: Date },
+  referenceNow: Date
+): UpcomingShuttleScheduleEntry {
+  const remainingMs = row.startAt.getTime() - referenceNow.getTime();
+  return {
+    entry: row.entry,
+    remainingMs,
+    remainingLabelKo: formatRemainingMsKo(remainingMs),
+    startAt: row.startAt,
+  };
+}
+
+export function getShuttleScheduleEntryPreview(
+  times: GetShuttleTimeProps[],
+  referenceNow: Date
+): ShuttleScheduleEntryPreview {
+  const candidates: Array<{ entry: GetShuttleTimeProps; startAt: Date }> = [];
+
+  for (const item of times) {
+    const startAt: Date | null = getScheduleEntryStartAt(item, referenceNow);
+    if (startAt === null) {
+      continue;
+    }
+    if (startAt.getTime() <= referenceNow.getTime()) {
+      continue;
+    }
+    candidates.push({ entry: item, startAt });
+  }
+
+  candidates.sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+
+  if (candidates.length === 0) {
+    return { kind: "empty" };
+  }
+
+  const first: { entry: GetShuttleTimeProps; startAt: Date } = candidates[0];
+
+  return {
+    kind: "upcoming",
+    next: mapScheduleEntryToUpcoming(first, referenceNow),
+    following:
+      candidates.length >= 2 ? mapScheduleEntryToUpcoming(candidates[1], referenceNow) : null,
+  };
+}
+
+export function getActiveShuttleWindowPreview(
+  times: GetShuttleTimeProps[],
+  referenceNow: Date
+): ShuttleWindowPreview {
+  const candidates: Array<{
+    entry: GetShuttleTimeProps;
+    windowEndAt: Date;
+    windowStartAt: Date;
+  }> = [];
+
+  for (const item of times) {
+    if (
+      (item.kind !== "ADHOC_WINDOW" && item.kind !== "PASSENGER_INFO") ||
+      item.windowStart === null ||
+      item.windowEnd === null
+    ) {
+      continue;
+    }
+
+    const windowStartAt: Date | null = parseDepartTimeOnCalendarDay(referenceNow, item.windowStart);
+    const windowEndAt: Date | null = parseDepartTimeOnCalendarDay(referenceNow, item.windowEnd);
+    if (windowStartAt === null || windowEndAt === null) {
+      continue;
+    }
+
+    const referenceTime = referenceNow.getTime();
+    if (windowStartAt.getTime() <= referenceTime && referenceTime <= windowEndAt.getTime()) {
+      candidates.push({ entry: item, windowEndAt, windowStartAt });
+    }
+  }
+
+  candidates.sort((a, b) => a.windowStartAt.getTime() - b.windowStartAt.getTime());
+
+  if (candidates.length === 0) {
+    return { kind: "empty" };
+  }
+
+  const first: {
+    entry: GetShuttleTimeProps;
+    windowEndAt: Date;
+    windowStartAt: Date;
+  } = candidates[0];
+
+  return {
+    kind: "active",
+    entry: first.entry,
+    windowEndAt: first.windowEndAt,
+    windowLabelKo: formatWindowRangeKo(first.windowStartAt, first.windowEndAt),
+    windowStartAt: first.windowStartAt,
+  };
+}

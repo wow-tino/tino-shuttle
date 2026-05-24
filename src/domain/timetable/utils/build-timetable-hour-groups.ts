@@ -1,0 +1,292 @@
+import type { GetShuttleTimeProps } from "#/domain/shuttle/api/models";
+import {
+  getActiveShuttleWindowPreview,
+  parseDepartTimeOnCalendarDay,
+} from "#/domain/shuttle/utils/shuttle-schedule";
+import { parsePgTimeOnLocalDay, startOfLocalDay } from "#/shared/utils";
+
+export type TimetableMinuteStatus = "past" | "current" | "future";
+
+export interface TimetableMinuteItem {
+  id: number;
+  minuteLabel: string;
+  status: TimetableMinuteStatus;
+  isCurrentHour: boolean;
+  isFirstDeparture: boolean;
+  isLastDeparture: boolean;
+}
+
+export interface TimetableHourGroup {
+  hour: number;
+  hourLabel: string;
+  status: TimetableMinuteStatus;
+  minutes: TimetableMinuteItem[];
+  sortAt: Date;
+}
+
+export interface TimetableNotice {
+  id: number;
+  label: string;
+  message: string;
+  status: TimetableMinuteStatus;
+  sortAt: Date;
+}
+
+export type TimetableTimelineItem =
+  | {
+      id: string;
+      kind: "hour-group";
+      sortAt: Date;
+      group: TimetableHourGroup;
+    }
+  | {
+      id: string;
+      kind: "notice";
+      sortAt: Date;
+      notice: TimetableNotice;
+    };
+
+interface FixedDepartureEntry {
+  id: number;
+  hour: number;
+  minute: number;
+  departureAt: Date;
+  isFirstDeparture: boolean;
+  isLastDeparture: boolean;
+}
+
+function formatTwoDigitNumber(numberValue: number) {
+  return numberValue.toString().padStart(2, "0");
+}
+
+function buildNoticeLabel(windowStart: string | null, windowEnd: string | null) {
+  if (windowStart === null || windowEnd === null) {
+    return "수시 운행";
+  }
+
+  return `${windowStart.slice(0, 5)} - ${windowEnd.slice(0, 5)}`;
+}
+
+function getTimetableMinuteStatus(
+  departureAt: Date,
+  currentDepartureId: number | null,
+  departureId: number,
+  referenceNow: Date
+) {
+  if (currentDepartureId === departureId) {
+    return "current" as const;
+  }
+
+  if (departureAt.getTime() < referenceNow.getTime()) {
+    return "past" as const;
+  }
+
+  return "future" as const;
+}
+
+function getTimetableHourStatus(minutes: TimetableMinuteItem[]) {
+  if (minutes.some((minute) => minute.status === "current")) {
+    return "current";
+  }
+
+  if (minutes.every((minute) => minute.status === "past")) {
+    return "past";
+  }
+
+  return "future";
+}
+
+function isShuttleWindowNoticeKind(kind: GetShuttleTimeProps["kind"]): boolean {
+  return kind === "ADHOC_WINDOW" || kind === "PASSENGER_INFO";
+}
+
+function getTimetableNoticeStatus(
+  windowStart: string | null,
+  windowEnd: string | null,
+  referenceNow: Date
+): TimetableMinuteStatus {
+  if (windowStart === null || windowEnd === null) {
+    return "future";
+  }
+
+  const windowStartAt = parseDepartTimeOnCalendarDay(referenceNow, windowStart);
+  const windowEndAt = parseDepartTimeOnCalendarDay(referenceNow, windowEnd);
+
+  if (windowStartAt === null || windowEndAt === null) {
+    return "future";
+  }
+
+  const referenceTime = referenceNow.getTime();
+
+  if (windowStartAt.getTime() <= referenceTime && referenceTime <= windowEndAt.getTime()) {
+    return "current";
+  }
+
+  if (windowEndAt.getTime() < referenceTime) {
+    return "past";
+  }
+
+  return "future";
+}
+
+function getTimetableNoticeSortAt(
+  dayStart: Date,
+  windowStart: string | null,
+  windowEnd: string | null,
+  referenceNow: Date
+): Date {
+  if (windowStart !== null) {
+    const windowStartAt = parseDepartTimeOnCalendarDay(referenceNow, windowStart);
+    if (windowStartAt !== null) {
+      return windowStartAt;
+    }
+  }
+
+  if (windowEnd !== null) {
+    const windowEndAt = parseDepartTimeOnCalendarDay(referenceNow, windowEnd);
+    if (windowEndAt !== null) {
+      return windowEndAt;
+    }
+  }
+
+  return new Date(dayStart.getTime() + 24 * 60 * 60 * 1_000);
+}
+
+function pushTimetableNotice(
+  notices: TimetableNotice[],
+  shuttleTime: GetShuttleTimeProps,
+  dayStart: Date,
+  referenceNow: Date
+) {
+  notices.push({
+    id: shuttleTime.id,
+    label: buildNoticeLabel(shuttleTime.windowStart, shuttleTime.windowEnd),
+    message: shuttleTime.message ?? "정해진 시각 없이 운행 중입니다.",
+    status: getTimetableNoticeStatus(shuttleTime.windowStart, shuttleTime.windowEnd, referenceNow),
+    sortAt: getTimetableNoticeSortAt(
+      dayStart,
+      shuttleTime.windowStart,
+      shuttleTime.windowEnd,
+      referenceNow
+    ),
+  });
+}
+
+export function buildTimetableHourGroups(shuttleTimes: GetShuttleTimeProps[], referenceNow: Date) {
+  const dayStart = startOfLocalDay(referenceNow);
+  const fixedDepartures: FixedDepartureEntry[] = [];
+  const notices: TimetableNotice[] = [];
+
+  shuttleTimes.forEach((shuttleTime) => {
+    if (isShuttleWindowNoticeKind(shuttleTime.kind)) {
+      pushTimetableNotice(notices, shuttleTime, dayStart, referenceNow);
+      return;
+    }
+
+    const departureAt = parsePgTimeOnLocalDay(dayStart, shuttleTime.departTime);
+
+    if (departureAt !== null) {
+      fixedDepartures.push({
+        id: shuttleTime.id,
+        hour: departureAt.getHours(),
+        minute: departureAt.getMinutes(),
+        departureAt,
+        isFirstDeparture: shuttleTime.isFirstDeparture,
+        isLastDeparture: shuttleTime.isLastDeparture,
+      });
+      return;
+    }
+
+    if (shuttleTime.windowStart !== null || shuttleTime.windowEnd !== null || shuttleTime.message) {
+      pushTimetableNotice(notices, shuttleTime, dayStart, referenceNow);
+    }
+  });
+
+  const activeWindowPreview = getActiveShuttleWindowPreview(shuttleTimes, referenceNow);
+  if (activeWindowPreview.kind === "active") {
+    const activeNotice = notices.find((notice) => notice.id === activeWindowPreview.entry.id);
+    if (activeNotice !== undefined) {
+      activeNotice.status = "current";
+    }
+  }
+
+  const hasActiveNotice =
+    activeWindowPreview.kind === "active" ||
+    notices.some((notice) => notice.status === "current");
+  const sortedFixedDepartures = [...fixedDepartures].sort(
+    (leftDeparture, rightDeparture) =>
+      leftDeparture.departureAt.getTime() - rightDeparture.departureAt.getTime()
+  );
+  const nextDeparture = hasActiveNotice
+    ? null
+    : sortedFixedDepartures.find(
+        (departure) => departure.departureAt.getTime() >= referenceNow.getTime()
+      );
+  const hourGroupsByHour = new Map<number, FixedDepartureEntry[]>();
+
+  sortedFixedDepartures.forEach((departure) => {
+    const hourDepartures = hourGroupsByHour.get(departure.hour) ?? [];
+    hourDepartures.push(departure);
+    hourGroupsByHour.set(departure.hour, hourDepartures);
+  });
+
+  const hourGroups: TimetableHourGroup[] = Array.from(hourGroupsByHour.entries()).map(
+    ([hour, departures]) => {
+      const isCurrentHour = nextDeparture?.hour === hour;
+      const minutes = departures.map((departure) => ({
+        id: departure.id,
+        minuteLabel: formatTwoDigitNumber(departure.minute),
+        status: getTimetableMinuteStatus(
+          departure.departureAt,
+          nextDeparture?.id ?? null,
+          departure.id,
+          referenceNow
+        ),
+        isCurrentHour,
+        isFirstDeparture: departure.isFirstDeparture,
+        isLastDeparture: departure.isLastDeparture,
+      }));
+
+      return {
+        hour,
+        hourLabel: `${formatTwoDigitNumber(hour)}시`,
+        status: getTimetableHourStatus(minutes),
+        minutes,
+        sortAt: departures[0].departureAt,
+      };
+    }
+  );
+
+  const timelineItems: TimetableTimelineItem[] = [
+    ...hourGroups.map((group) => ({
+      id: `hour-${group.hour}`,
+      kind: "hour-group" as const,
+      sortAt: group.sortAt,
+      group,
+    })),
+    ...notices.map((notice) => ({
+      id: `notice-${notice.id}`,
+      kind: "notice" as const,
+      sortAt: notice.sortAt,
+      notice,
+    })),
+  ].sort((leftItem, rightItem) => {
+    const sortResult = leftItem.sortAt.getTime() - rightItem.sortAt.getTime();
+
+    if (sortResult !== 0) {
+      return sortResult;
+    }
+
+    if (leftItem.kind === rightItem.kind) {
+      return 0;
+    }
+
+    return leftItem.kind === "notice" ? -1 : 1;
+  });
+
+  return {
+    hourGroups,
+    notices,
+    timelineItems,
+  };
+}

@@ -10,16 +10,6 @@ export function startOfLocalDay(reference: Date): Date {
   return d;
 }
 
-export function addDays(reference: Date, days: number): Date {
-  const d = new Date(reference.getTime());
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-export function addMinutes(reference: Date, minutes: number): Date {
-  return new Date(reference.getTime() + minutes * 60_000);
-}
-
 export function parsePgTimeOnLocalDay(dayStart: Date, time: string | null) {
   if (!time) {
     return null;
@@ -35,8 +25,10 @@ export function parsePgTimeOnLocalDay(dayStart: Date, time: string | null) {
   return d;
 }
 
-export function formatHm(date: Date) {
-  const h = date.getHours().toString().padStart(2, "0");
-  const m = date.getMinutes().toString().padStart(2, "0");
-  return `${h}:${m}`;
+export function formatUpdatedTime(timestamp: number) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(timestamp));
 }

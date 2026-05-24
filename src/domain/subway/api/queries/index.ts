@@ -1,16 +1,32 @@
 import { queryOptions } from "@tanstack/react-query";
 
+import type { GetSubwayTimetableRequest } from "../models";
+
 import { subwayKeys } from "#/domain/subway/api/keys";
-import { getRealtimeStationArrival } from "#/domain/subway/api/services";
+import {
+  getSubwayHomePreview,
+  getSubwayRealtime,
+  getSubwayTimetable,
+} from "#/domain/subway/api/services";
 import { ms } from "#/shared/utils";
 
 export const SUBWAY_QUERIES = {
-  GetRealtimeStationArrival: (stationName: string) =>
+  GetSubwayHomePreview: (stationName: string) =>
     queryOptions({
-      queryKey: subwayKeys.detail(stationName),
-      queryFn: () => getRealtimeStationArrival(stationName),
-      staleTime: ms.seconds(15),
-      gcTime: ms.minutes(5),
+      queryKey: subwayKeys.preview(stationName),
+      queryFn: () => getSubwayHomePreview(stationName),
       refetchInterval: ms.seconds(25),
+    }),
+  GetSubwayRealtime: (lineName: GetSubwayTimetableRequest) =>
+    queryOptions({
+      queryKey: subwayKeys.realtime(lineName),
+      queryFn: () => getSubwayRealtime(lineName),
+      refetchInterval: ms.seconds(25),
+    }),
+  GetSubwayTimetable: (lineName: GetSubwayTimetableRequest) =>
+    queryOptions({
+      queryKey: subwayKeys.timetable(lineName),
+      queryFn: () => getSubwayTimetable(lineName),
+      refetchInterval: ms.minutes(1),
     }),
 };
