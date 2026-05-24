@@ -1,9 +1,13 @@
+import { useEffect } from "react";
+
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import type { ReactNode } from "react";
+
+import { AppHttpError, error } from "#/shared/utils";
 
 let context:
   | {
@@ -38,6 +42,7 @@ export function TanStackProvider({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      <GlobalMutationErrorHandler />
       <TanStackDevtools
         config={{
           position: "bottom-right",
@@ -55,4 +60,26 @@ export function TanStackProvider({ children }: { children: ReactNode }) {
       />
     </QueryClientProvider>
   );
+}
+
+function GlobalMutationErrorHandler() {
+  const queryClient = useQueryClient();
+
+  useEffect(
+    function useGlobalMutationErrorHandler() {
+      const unsubscribe = queryClient.getMutationCache().subscribe((event) => {
+        if (event.type === "updated" && event.action.type === "error") {
+          const err = event.action.error;
+          if (err instanceof AppHttpError) {
+            error(err.serverMessage);
+          }
+        }
+      });
+
+      return unsubscribe;
+    },
+    [queryClient]
+  );
+
+  return null;
 }

@@ -11,6 +11,7 @@ import { TanStackProvider } from "#/shared/components/provider";
 import { GoogleAnalyticsProvider } from "#/shared/components/provider/google-analytics-provider";
 import { WebViewEnvironmentProvider } from "#/shared/components/provider/web-view-environment-provider";
 import { PwaServiceWorkerRegister } from "#/shared/components/pwa-service-worker-register";
+import { Toaster } from "#/shared/components/sonner";
 import { appleSplashScreenLinks } from "#/shared/constants/apple-splash-screen-links";
 
 interface MyRouterContext {
@@ -150,6 +151,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </div>
           </TanStackProvider>
         </WebViewEnvironmentProvider>
+        <Toaster position="top-center" richColors />
         <PwaServiceWorkerRegister />
         <Scripts />
       </body>
