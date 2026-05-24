@@ -4,7 +4,8 @@ import ky from "ky";
 
 import type { RealtimeArrivalItem } from "#/domain/subway/api/models";
 import { SeoulRealtimeStationArrivalApiResponseSchema } from "#/domain/subway/api/models";
-import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
+import { withErrorResponse, withSuccessResponse } from "#/shared/api";
+import { withErrorHandler } from "#/shared/api/with-error-handler";
 import { ms } from "#/shared/utils";
 
 const SHUTTLE_HOME_SUBWAY_LINE_PREVIEW_CONFIGS = [
@@ -147,50 +148,44 @@ const subwayApiKey = process.env.SUBWAY_API_KEY ?? "";
 export const Route = createFileRoute("/api/subway/preview")({
   server: {
     handlers: {
-      GET: async ({ request }: { request: Request }) => {
-        try {
-          const url = new URL(request.url);
-          const stationNameRaw = url.searchParams.get("stationName");
-          const stationName = (stationNameRaw ?? "").trim();
-          if (stationName.length === 0) {
-            return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
-          }
-
-          const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
-            apiKey: subwayApiKey,
-            stationName,
-          });
-
-          const raw = await ky
-            .get(seoulUrl, { timeout: ms.seconds(15), retry: { limit: 0 } })
-            .json();
-          const parsed = SeoulRealtimeStationArrivalApiResponseSchema.safeParse(raw);
-          if (!parsed.success) {
-            throw new Error("서울시 지하철 도착 API 응답 형식이 예상과 다릅니다.");
-          }
-
-          const code = parsed.data.errorMessage?.code;
-          if (code && code !== "INFO-000") {
-            const errorMessage =
-              parsed.data.errorMessage?.message ?? "서울시 지하철 도착 API 오류가 발생했습니다.";
-            throw new Error(errorMessage);
-          }
-
-          const arrivals = (parsed.data.realtimeArrivalList ?? []).map((arrival) => ({
-            subwayId: arrival.subwayId ?? "",
-            updnLine: arrival.updnLine ?? "",
-            trainLineNm: arrival.trainLineNm ?? "",
-            bstatnNm: arrival.bstatnNm ?? "",
-            arvlMsg2: normalizePreviewArrivalMessage(arrival.arvlMsg2 ?? ""),
-            btrainSttus: arrival.btrainSttus ?? "",
-          }));
-          const lines = buildSubwayHomePreviewLines(arrivals);
-          const payload = { stationName, arrivals, lines };
-          return withSuccessResponse(payload);
-        } catch (error: unknown) {
-          return withErrorResponseFromUnknown(error);
+      GET: withErrorHandler(async ({ request }: { request: Request }) => {
+        const url = new URL(request.url);
+        const stationNameRaw = url.searchParams.get("stationName");
+        const stationName = (stationNameRaw ?? "").trim();
+        if (stationName.length === 0) {
+          return withErrorResponse("stationName 쿼리가 필요합니다.", 400);
         }
-      },
+
+        const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
+          apiKey: subwayApiKey,
+          stationName,
+        });
+
+        const raw = await ky.get(seoulUrl, { timeout: ms.seconds(15), retry: { limit: 0 } }).json();
+        const parsed = SeoulRealtimeStationArrivalApiResponseSchema.safeParse(raw);
+        if (!parsed.success) {
+          throw new Error("서울시 지하철 도착 API 응답 형식이 예상과 다릅니다.");
+        }
+
+        const code = parsed.data.errorMessage?.code;
+        if (code && code !== "INFO-000") {
+          const errorMessage =
+            parsed.data.errorMessage?.message ?? "서울시 지하철 도착 API 오류가 발생했습니다.";
+          throw new Error(errorMessage);
+        }
+
+        const arrivals = (parsed.data.realtimeArrivalList ?? []).map((arrival) => ({
+          subwayId: arrival.subwayId ?? "",
+          updnLine: arrival.updnLine ?? "",
+          trainLineNm: arrival.trainLineNm ?? "",
+          bstatnNm: arrival.bstatnNm ?? "",
+          arvlMsg2: normalizePreviewArrivalMessage(arrival.arvlMsg2 ?? ""),
+          btrainSttus: arrival.btrainSttus ?? "",
+        }));
+        const lines = buildSubwayHomePreviewLines(arrivals);
+        const payload = { stationName, arrivals, lines };
+        return withSuccessResponse(payload);
+      }),
     },
   },
 });

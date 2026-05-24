@@ -1,6 +1,6 @@
 export {
   type ApiResponseWithBody,
   withErrorResponse,
-  withErrorResponseFromUnknown,
   withSuccessResponse,
 } from "./api-response-with-body";
+export { withErrorHandler } from "./with-error-handler";
