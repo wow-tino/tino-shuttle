@@ -9,15 +9,13 @@ interface WebViewEnvironmentProviderProps {
 }
 
 export function WebViewEnvironmentProvider({ children }: WebViewEnvironmentProviderProps) {
-  const setStorePlatform = useWebViewStore((state) => state.setStorePlatform);
+  const setIsInWebView = useWebViewStore((state) => state.setIsInWebView);
 
   const { postMessage } = useWebView((event) => {
-    const { type, data } = event;
+    const { type } = event;
 
     if (type === WebViewEvent.IN_APP_WEB_VIEW) {
-      const { storePlatform } = data as { storePlatform: string };
-      // storePlatform에 해당하는 스토어 값 설정하기
-      setStorePlatform(storePlatform);
+      setIsInWebView(true);
     }
   });
 

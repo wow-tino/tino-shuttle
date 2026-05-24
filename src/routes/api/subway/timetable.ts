@@ -8,7 +8,8 @@ import type {
   GetSubwayTimetableTrainRow,
 } from "#/domain/subway/api/models";
 import { DataGoKrTrainScheduleApiResponseSchema } from "#/domain/subway/api/models";
-import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
+import { withErrorResponse, withSuccessResponse } from "#/shared/api";
+import { withErrorHandler } from "#/shared/api/with-error-handler";
 import { ms } from "#/shared/utils";
 
 const SUBWAY_TIMETABLE_URL = "http://apis.data.go.kr/B553766/schedule/getTrainSch";
@@ -295,56 +296,52 @@ function getKoreanDate() {
 export const Route = createFileRoute("/api/subway/timetable")({
   server: {
     handlers: {
-      GET: async ({ request }: { request: Request }) => {
-        try {
-          const requestUrl = new URL(request.url);
-          const lineNameRaw = requestUrl.searchParams.get("lineNm");
-          const lineName = (lineNameRaw ?? "").trim();
+      GET: withErrorHandler(async ({ request }: { request: Request }) => {
+        const requestUrl = new URL(request.url);
+        const lineNameRaw = requestUrl.searchParams.get("lineNm");
+        const lineName = (lineNameRaw ?? "").trim();
 
-          if (lineName.length === 0) {
-            return withErrorResponse("lineNm 쿼리가 필요합니다.", 400);
-          }
-
-          if (!isAllowedLineName(lineName)) {
-            return withErrorResponse("lineNm은 4호선 또는 수인분당선만 가능합니다.", 400);
-          }
-
-          if (subwayTimetableKey.length === 0) {
-            return withErrorResponse("SUBWAY_TIMETABLE_KEY 환경변수가 필요합니다.", 500);
-          }
-
-          const now = getKoreanDate();
-          const weekdayName = resolveWeekdayName(now);
-          const searchDateTime = formatLocalDateTime(now);
-
-          const directionGroups = resolveDirectionGroups(lineName);
-          const [uphillTrainSchedules, downwardTrainSchedules] = await Promise.all([
-            getTrainSchedulesByDirections({
-              directions: directionGroups.uphill,
-              weekdayName,
-              lineName,
-              stationName: JEONGWANG_STATION_NAME,
-              searchDateTime,
-            }),
-            getTrainSchedulesByDirections({
-              directions: directionGroups.downward,
-              weekdayName,
-              lineName,
-              stationName: JEONGWANG_STATION_NAME,
-              searchDateTime,
-            }),
-          ]);
-          const payload = {
-            station: JEONGWANG_STATION_NAME,
-            uphill: buildNextTrainRows({ trainSchedules: uphillTrainSchedules, now }),
-            downward: buildNextTrainRows({ trainSchedules: downwardTrainSchedules, now }),
-          };
-
-          return withSuccessResponse(payload);
-        } catch (error: unknown) {
-          return withErrorResponseFromUnknown(error);
+        if (lineName.length === 0) {
+          return withErrorResponse("lineNm 쿼리가 필요합니다.", 400);
         }
-      },
+
+        if (!isAllowedLineName(lineName)) {
+          return withErrorResponse("lineNm은 4호선 또는 수인분당선만 가능합니다.", 400);
+        }
+
+        if (subwayTimetableKey.length === 0) {
+          return withErrorResponse("SUBWAY_TIMETABLE_KEY 환경변수가 필요합니다.", 500);
+        }
+
+        const now = getKoreanDate();
+        const weekdayName = resolveWeekdayName(now);
+        const searchDateTime = formatLocalDateTime(now);
+
+        const directionGroups = resolveDirectionGroups(lineName);
+        const [uphillTrainSchedules, downwardTrainSchedules] = await Promise.all([
+          getTrainSchedulesByDirections({
+            directions: directionGroups.uphill,
+            weekdayName,
+            lineName,
+            stationName: JEONGWANG_STATION_NAME,
+            searchDateTime,
+          }),
+          getTrainSchedulesByDirections({
+            directions: directionGroups.downward,
+            weekdayName,
+            lineName,
+            stationName: JEONGWANG_STATION_NAME,
+            searchDateTime,
+          }),
+        ]);
+        const payload = {
+          station: JEONGWANG_STATION_NAME,
+          uphill: buildNextTrainRows({ trainSchedules: uphillTrainSchedules, now }),
+          downward: buildNextTrainRows({ trainSchedules: downwardTrainSchedules, now }),
+        };
+
+        return withSuccessResponse(payload);
+      }),
     },
   },
 });

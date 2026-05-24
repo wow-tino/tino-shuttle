@@ -8,7 +8,8 @@ import type {
   RealtimeArrivalItem,
 } from "#/domain/subway/api/models";
 import { SeoulRealtimeStationArrivalApiResponseSchema } from "#/domain/subway/api/models";
-import { withErrorResponse, withErrorResponseFromUnknown, withSuccessResponse } from "#/shared/api";
+import { withErrorResponse, withSuccessResponse } from "#/shared/api";
+import { withErrorHandler } from "#/shared/api/with-error-handler";
 import { ms } from "#/shared/utils";
 
 const SEOUL_REALTIME_ARRIVAL_START_INDEX = 1;
@@ -99,65 +100,59 @@ function buildUphillDownwardArrays(input: { arrivals: RealtimeArrivalItem[] }) {
 export const Route = createFileRoute("/api/subway/realtime")({
   server: {
     handlers: {
-      GET: async ({ request }: { request: Request }) => {
-        try {
-          const requestUrl = new URL(request.url);
-          const lineNameRaw = requestUrl.searchParams.get("lineNm");
-          const lineName = (lineNameRaw ?? "").trim();
+      GET: withErrorHandler(async ({ request }: { request: Request }) => {
+        const requestUrl = new URL(request.url);
+        const lineNameRaw = requestUrl.searchParams.get("lineNm");
+        const lineName = (lineNameRaw ?? "").trim();
 
-          if (lineName.length === 0) {
-            return withErrorResponse("lineNm 쿼리가 필요합니다.", 400);
-          }
-
-          if (!isAllowedLineName(lineName)) {
-            return withErrorResponse("lineNm은 4호선 또는 수인분당선만 가능합니다.", 400);
-          }
-
-          const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
-            apiKey: subwayApiKey,
-            stationName: STATION_NAME,
-          });
-
-          const raw = await ky
-            .get(seoulUrl, { timeout: ms.seconds(15), retry: { limit: 0 } })
-            .json();
-          const parsed = SeoulRealtimeStationArrivalApiResponseSchema.safeParse(raw);
-          if (!parsed.success) {
-            throw withErrorResponse("서울시 지하철 도착 API 응답 형식이 예상과 다릅니다.", 500);
-          }
-
-          const errorCode = parsed.data.errorMessage?.code;
-          if (errorCode !== undefined && errorCode !== "" && errorCode !== "INFO-000") {
-            const errorMessage =
-              parsed.data.errorMessage?.message ?? "서울시 지하철 도착 API 오류가 발생했습니다.";
-            throw withErrorResponse(errorMessage, 500);
-          }
-
-          const targetSubwayId = LINE_SUBWAY_ID_MAP[lineName];
-          const arrivals = (parsed.data.realtimeArrivalList ?? [])
-            .filter((arrival) => (arrival.subwayId ?? "") === targetSubwayId)
-            .map((arrival) => ({
-              subwayId: arrival.subwayId ?? "",
-              updnLine: arrival.updnLine ?? "",
-              trainLineNm: arrival.trainLineNm ?? "",
-              bstatnNm: arrival.bstatnNm ?? "",
-              arvlMsg2: normalizeRealtimeMessage(arrival.arvlMsg2 ?? ""),
-              btrainSttus: arrival.btrainSttus ?? "",
-            }));
-
-          const { uphill, downward } = buildUphillDownwardArrays({ arrivals });
-
-          const payload: GetSubwayRealtimeResponse = {
-            station: STATION_NAME,
-            uphill,
-            downward,
-          };
-
-          return withSuccessResponse(payload);
-        } catch (error: unknown) {
-          return withErrorResponseFromUnknown(error);
+        if (lineName.length === 0) {
+          return withErrorResponse("lineNm 쿼리가 필요합니다.", 400);
         }
-      },
+
+        if (!isAllowedLineName(lineName)) {
+          return withErrorResponse("lineNm은 4호선 또는 수인분당선만 가능합니다.", 400);
+        }
+
+        const seoulUrl = buildSeoulRealtimeStationArrivalUrl({
+          apiKey: subwayApiKey,
+          stationName: STATION_NAME,
+        });
+
+        const raw = await ky.get(seoulUrl, { timeout: ms.seconds(15), retry: { limit: 0 } }).json();
+        const parsed = SeoulRealtimeStationArrivalApiResponseSchema.safeParse(raw);
+        if (!parsed.success) {
+          throw withErrorResponse("서울시 지하철 도착 API 응답 형식이 예상과 다릅니다.", 500);
+        }
+
+        const errorCode = parsed.data.errorMessage?.code;
+        if (errorCode !== undefined && errorCode !== "" && errorCode !== "INFO-000") {
+          const errorMessage =
+            parsed.data.errorMessage?.message ?? "서울시 지하철 도착 API 오류가 발생했습니다.";
+          throw withErrorResponse(errorMessage, 500);
+        }
+
+        const targetSubwayId = LINE_SUBWAY_ID_MAP[lineName];
+        const arrivals = (parsed.data.realtimeArrivalList ?? [])
+          .filter((arrival) => (arrival.subwayId ?? "") === targetSubwayId)
+          .map((arrival) => ({
+            subwayId: arrival.subwayId ?? "",
+            updnLine: arrival.updnLine ?? "",
+            trainLineNm: arrival.trainLineNm ?? "",
+            bstatnNm: arrival.bstatnNm ?? "",
+            arvlMsg2: normalizeRealtimeMessage(arrival.arvlMsg2 ?? ""),
+            btrainSttus: arrival.btrainSttus ?? "",
+          }));
+
+        const { uphill, downward } = buildUphillDownwardArrays({ arrivals });
+
+        const payload: GetSubwayRealtimeResponse = {
+          station: STATION_NAME,
+          uphill,
+          downward,
+        };
+
+        return withSuccessResponse(payload);
+      }),
     },
   },
 });
