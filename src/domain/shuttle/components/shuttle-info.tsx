@@ -122,27 +122,9 @@ function getShuttleInfoDisplay({ times, referenceNow, weekday }: GetShuttleInfoD
   const scheduleEntry = getShuttleScheduleEntryPreview(times, referenceNow);
   const activeWindow = getActiveShuttleWindowPreview(times, referenceNow);
   if (activeWindow.kind === "active") {
-    const windowRange = getWindowRange(activeWindow.entry, referenceNow);
-    if (activeWindow.entry.isFirstDeparture) {
-      return {
-        primaryLabel: `${formatDateAsKoreanClock(activeWindow.windowStartAt)} 첫차`,
-        primarySuffix: null,
-        secondaryLabel: "다음 셔틀",
-        secondaryValue:
-          scheduleEntry.kind === "upcoming" ? getFollowingRideTimeLabel(scheduleEntry.next) : null,
-      };
-    }
-    if (activeWindow.entry.isLastDeparture) {
-      return {
-        primaryLabel: `${formatDateAsKoreanClock(activeWindow.windowStartAt)} 막차`,
-        primarySuffix: null,
-        secondaryLabel: "운행 시간",
-        secondaryValue: windowRange?.label ?? activeWindow.windowLabelKo,
-      };
-    }
     return {
       primaryLabel: getWindowPrimaryLabel(activeWindow.entry.kind),
-      primarySuffix: null,
+      primarySuffix: activeWindow.entry.isLastDeparture ? "막차" : null,
       secondaryLabel: "다음 셔틀",
       secondaryValue:
         scheduleEntry.kind === "upcoming" ? getFollowingRideTimeLabel(scheduleEntry.next) : null,
