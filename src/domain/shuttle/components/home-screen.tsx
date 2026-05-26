@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 
+import { AppDownloadBanner } from "./app-download-banner";
 import { ShuttleInfo } from "./shuttle-info";
 
 import swapIcon from "/icons/swap.svg";
@@ -43,7 +44,6 @@ export function HomeScreen({ weekday }: ShuttleHomeScreenProps) {
       weekday,
     })
   );
-
   const onSelectDeparture = (id: string) => {
     const nextStopSelection = buildSelectionForDepartureChange(selectedStopId, id, data);
     setSelectedStopId(nextStopSelection);
@@ -194,6 +194,9 @@ export function HomeScreen({ weekday }: ShuttleHomeScreenProps) {
         />
         <SubwayArrival />
       </div>
+      <ClientOnly>
+        <AppDownloadBanner />
+      </ClientOnly>
     </main>
   );
 }
